@@ -1,0 +1,634 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Auth ────────────────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  email        String?   @unique
+  passwordHash String?
+  name         String?
+  firstName    String?
+  lastName     String?
+  dateOfBirth  DateTime?
+  avatarUrl    String?
+  role         UserRole  @default(CUSTOMER)
+  phone        String?
+
+  welcomeDiscountUsed    Boolean @default(false)
+  newsletterDiscountUsed Boolean @default(false)
+  newsletterSubscribed   Boolean @default(false)
+
+  addresses           Address[]
+  orders              Order[]
+  reviews             Review[]
+  wishlist            WishlistItem[]
+  passwordResetTokens PasswordResetToken[]
+  newsletter          Newsletter?
+
+  steamAccount SteamAccount?
+  sessions     Session[]
+  purchases    SkinPurchase[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ── Steam linking & sessions ─────────────────────
+
+model SteamAccount {
+  id          String  @id @default(cuid())
+  userId      String  @unique
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  steamId64   String  @unique
+  personaName String?
+  profileUrl  String?
+  avatar      String?
+  avatarFull  String?
+  // Steam trade offer URL + parsed partner/token for validation
+  tradeUrl         String?
+  tradePartnerId   String?
+  tradeToken       String?
+  tradeUrlVerified Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([steamId64])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  userAgent String?
+  ip        String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+  SUPER_ADMIN
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Address {
+  id         String  @id @default(cuid())
+  userId     String
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName  String
+  lastName   String
+  address1   String
+  address2   String?
+  city       String
+  province   String?
+  postalCode String
+  country    String
+  phone      String?
+  isDefault  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ── Store Settings ───────────────────────────────
+
+model StoreSettings {
+  id              String   @id @default("default")
+  name            String   @default("Higherskins")
+  description     String?
+  logoUrl         String?
+  faviconUrl      String?
+  primaryColor    String   @default("#000000")
+  secondaryColor  String   @default("#ffffff")
+  email           String?
+  phone           String?
+  address         String?
+  currency        String   @default("EUR")
+  taxRate         Decimal  @default(21)
+  freeShippingMin Decimal?
+  metaTitle       String?
+  metaDescription String?
+  facebook        String?
+  instagram       String?
+  tiktok          String?
+
+  updatedAt DateTime @updatedAt
+}
+
+// ── Catalog ──────────────────────────────────────
+
+model Category {
+  id          String            @id @default(cuid())
+  name        String
+  slug        String            @unique
+  description String?
+  imageUrl    String?
+  parentId    String?
+  parent      Category?         @relation("SubCategories", fields: [parentId], references: [id])
+  children    Category[]        @relation("SubCategories")
+  sortOrder   Int               @default(0)
+  isActive    Boolean           @default(true)
+  products    ProductCategory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId])
+  @@index([isActive])
+}
+
+model Product {
+  id               String        @id @default(cuid())
+  name             String
+  slug             String        @unique
+  sku              String        @unique
+  description      String?
+  shortDescription String?
+  price            Decimal
+  comparePrice     Decimal?
+  costPrice        Decimal?
+  trackInventory   Boolean       @default(true)
+  quantity         Int           @default(0)
+  lowStockAlert    Int           @default(5)
+  weight           Decimal?
+  metaTitle        String?
+  metaDescription  String?
+  status           ProductStatus @default(DRAFT)
+  isFeatured       Boolean       @default(false)
+  metadata         Json?
+
+  brand           String?
+  gtin            String?
+  ean             String?
+  mpn             String?
+  googleCategory  String?
+  condition       String  @default("new")
+  characteristics Json?
+
+  images     ProductImage[]
+  categories ProductCategory[]
+  variants   ProductVariant[]
+  orderItems OrderItem[]
+  reviews    Review[]
+  wishlist   WishlistItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([isFeatured])
+  @@index([name])
+  @@index([sku])
+  @@index([brand])
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@index([status, isFeatured])
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  url       String
+  alt       String?
+  sortOrder Int     @default(0)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, sortOrder])
+}
+
+model ProductCategory {
+  productId  String
+  categoryId String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+  @@index([categoryId])
+}
+
+model ProductVariant {
+  id        String   @id @default(cuid())
+  name      String
+  sku       String   @unique
+  price     Decimal?
+  quantity  Int      @default(0)
+  options   Json
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+// ── Orders ───────────────────────────────────────
+
+model Order {
+  id          String      @id @default(cuid())
+  orderNumber String      @unique @default(cuid())
+  status      OrderStatus @default(PENDING)
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  customerName    String
+  customerEmail   String
+  customerPhone   String?
+  shippingAddress Json
+  shippingMethod  String?
+  shippingCost    Decimal @default(0)
+  trackingNumber  String?
+
+  subtotal        Decimal
+  taxAmount       Decimal
+  discountAmount  Decimal  @default(0)
+  discountCode    String?
+  discountPercent Decimal? @db.Decimal(5, 2)
+  total           Decimal
+
+  paymentStatus PaymentStatus @default(PENDING)
+  paymentMethod String?
+  paymentId     String?
+
+  notes String?
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  quantity    Int
+  price       Decimal
+  total       Decimal
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productName String
+  productSku  String
+  variantName String?
+}
+
+// ── Content ──────────────────────────────────────
+
+model Banner {
+  id           String     @id @default(cuid())
+  type         BannerType @default(HERO)
+  title        String
+  subtitle     String?
+  description  String?
+  imageUrl     String?
+  linkUrl      String?
+  ctaLabel     String?
+  bgColor      String     @default("#1A1A2E")
+  textColor    String     @default("#ffffff")
+  badgeText    String?
+  oldPrice     String?
+  newPrice     String?
+  discountText String?
+  isActive     Boolean    @default(true)
+  sortOrder    Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+enum BannerType {
+  HERO
+  PROMO_SMALL
+  PROMO_WIDE
+  DEAL_CARD
+}
+
+model Brand {
+  id        String   @id @default(cuid())
+  name      String
+  logoUrl   String?
+  linkUrl   String?
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model HomepageSection {
+  id           String   @id @default(cuid())
+  title        String
+  subtitle     String?
+  slug         String   @unique
+  filterType   String   @default("featured")
+  categorySlug String?
+  maxProducts  Int      @default(5)
+  viewAllUrl   String?
+  viewAllLabel String   @default("View all")
+  bgStyle      String   @default("white")
+  columns      Int      @default(5)
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model HomepageTab {
+  id        String   @id @default(cuid())
+  label     String
+  icon      String?
+  linkUrl   String
+  color     String   @default("#333333")
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UtilityLink {
+  id        String   @id @default(cuid())
+  label     String
+  linkUrl   String
+  icon      String?
+  position  String   @default("left")
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PromoStripItem {
+  id        String   @id @default(cuid())
+  icon      String
+  title     String
+  subtitle  String?
+  linkUrl   String?
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Page {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  content   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ── Reviews ──────────────────────────────────────
+
+model Review {
+  id         String   @id @default(cuid())
+  rating     Int
+  comment    String?
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  isApproved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+// ── Wishlist ─────────────────────────────────────
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+// ── Newsletter & Discounts ───────────────────────
+
+model Newsletter {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  userId         String?   @unique
+  user           User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  discountCode   String?   @unique
+  discountUsed   Boolean   @default(false)
+  unsubscribedAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+// ── Import ───────────────────────────────────────
+
+model ImportJob {
+  id        String       @id @default(cuid())
+  fileName  String
+  status    ImportStatus @default(PENDING)
+  totalRows Int          @default(0)
+  processed Int          @default(0)
+  errors    Int          @default(0)
+  errorLog  Json?
+  userId    String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+enum ImportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// ── Product Feed Config ──────────────────────────
+
+model FeedConfig {
+  id            String    @id @default(cuid())
+  type          String
+  name          String
+  isActive      Boolean   @default(false)
+  format        String    @default("xml")
+  lastGenerated DateTime?
+  url           String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// ── CS2 Skins Marketplace ────────────────────────
+
+// A skin *definition* — one row per weapon+paint (e.g. "AWP | Dragon Lore").
+// market_hash_name variants (exterior / StatTrak) live on SkinListing.
+model Skin {
+  id          String  @id @default(cuid())
+  // Stable key from the source catalog (bymykel id, e.g. "skin-1")
+  externalId  String  @unique
+  name        String // "AWP | Dragon Lore"
+  weapon      String // "AWP"
+  category    String // "Rifle" | "Pistol" | "Knife" | "Gloves" | "SMG" ...
+  pattern     String? // paint/finish name, e.g. "Dragon Lore"
+  rarity      String // "Consumer Grade" ... "Covert" ... "Contraband"
+  rarityColor String // hex, from source
+  collection  String?
+  minFloat    Float   @default(0)
+  maxFloat    Float   @default(1)
+  imageUrl    String?
+  hasStatTrak Boolean @default(false)
+  hasSouvenir Boolean @default(false)
+  isKnife     Boolean @default(false)
+  isGloves    Boolean @default(false)
+  // Doppler phases etc.
+  phases      Json?
+
+  // Denormalized market summary for fast catalog sorting/filtering
+  lowestPrice  Decimal? @db.Decimal(12, 2)
+  listingCount Int      @default(0)
+
+  listings     SkinListing[]
+  priceHistory PriceHistory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([weapon])
+  @@index([category])
+  @@index([rarity])
+  @@index([lowestPrice])
+  @@index([name])
+}
+
+enum Exterior {
+  FN // Factory New
+  MW // Minimal Wear
+  FT // Field-Tested
+  WW // Well-Worn
+  BS // Battle-Scarred
+  NA // vanilla / no exterior
+}
+
+// A concrete sellable offer for a specific exterior/float/seed.
+model SkinListing {
+  id             String   @id @default(cuid())
+  skinId         String
+  skin           Skin     @relation(fields: [skinId], references: [id], onDelete: Cascade)
+  marketHashName String // "AWP | Dragon Lore (Factory New)" or StatTrak™ variant
+  exterior       Exterior @default(NA)
+  isStatTrak     Boolean  @default(false)
+  isSouvenir     Boolean  @default(false)
+  float          Float?
+  paintSeed      Int?
+  phase          String?
+  stickers       Json?
+  inspectLink    String?
+  imageUrl       String?
+
+  price      Decimal  @db.Decimal(12, 2)
+  currency   String   @default("USD")
+  steamPrice Decimal? @db.Decimal(12, 2)
+  // % below Steam reference price (positive = cheaper than Steam)
+  discountPct Float?
+  market      String   @default("higherskins") // source marketplace
+  status      String   @default("available") // available | reserved | sold
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  purchase SkinPurchase?
+
+  @@index([skinId])
+  @@index([exterior])
+  @@index([price])
+  @@index([float])
+  @@index([status])
+  @@index([isStatTrak])
+}
+
+// Time series of reference prices per skin+market for charts.
+model PriceHistory {
+  id        String   @id @default(cuid())
+  skinId    String
+  skin      Skin     @relation(fields: [skinId], references: [id], onDelete: Cascade)
+  market    String   @default("steam")
+  price     Decimal  @db.Decimal(12, 2)
+  volume    Int      @default(0)
+  recordedAt DateTime
+
+  @@index([skinId, recordedAt])
+  @@index([skinId, market, recordedAt])
+}
+
+model SkinPurchase {
+  id        String      @id @default(cuid())
+  listingId String      @unique
+  listing   SkinListing @relation(fields: [listingId], references: [id])
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  price     Decimal     @db.Decimal(12, 2)
+  currency  String      @default("USD")
+  status    String      @default("pending") // pending | trade_sent | completed | failed
+  tradeUrl  String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([userId])
+}
+
+// Idempotent catalog import run log.
+model SkinImportRun {
+  id          String    @id @default(cuid())
+  source      String    @default("bymykel")
+  status      String    @default("running") // running | completed | failed
+  dryRun      Boolean   @default(false)
+  totalItems  Int       @default(0)
+  created     Int       @default(0)
+  updated     Int       @default(0)
+  skipped     Int       @default(0)
+  errorsCount Int       @default(0)
+  errorLog    Json?
+  startedAt   DateTime  @default(now())
+  finishedAt  DateTime?
+}
