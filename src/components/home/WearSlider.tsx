@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { EXTERIORS } from "@/lib/skins/shared";
+import { Panel } from "./Section";
 
 // Only the five real wear buckets (drop the NA sentinel).
 const BUCKETS = EXTERIORS.filter((e) => e.code !== "NA");
@@ -17,7 +18,7 @@ export function WearSlider() {
   const active = bucketForFloat(float);
 
   return (
-    <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-5 sm:p-6">
+    <Panel>
       <div className="mb-5 flex items-end justify-between gap-3">
         <div>
           <div className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
@@ -77,10 +78,12 @@ export function WearSlider() {
         })}
       </div>
 
-      <div className="mt-4 flex items-center justify-between rounded-xl bg-[color:var(--color-bg-secondary)] px-4 py-3">
-        <span className="text-sm text-[color:var(--color-text-secondary)]">This float is</span>
-        <span className="text-sm font-bold text-[color:var(--color-text)]">{active.label}</span>
+      <div className="mt-auto pt-4">
+        <div className="flex items-center justify-between rounded-xl bg-[color:var(--color-bg-secondary)] px-4 py-3">
+          <span className="text-sm text-[color:var(--color-text-secondary)]">This float is</span>
+          <span className="text-sm font-bold text-[color:var(--color-text)]">{active.label}</span>
+        </div>
       </div>
-    </div>
+    </Panel>
   );
 }

@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { buildPriceHistory } from "./pricing";
-import type { ExteriorCode } from "./shared";
+import { CATEGORY_LABELS, type ExteriorCode } from "./shared";
 
 export interface CatalogFilters {
   search?: string;
@@ -474,6 +474,313 @@ export async function getBudgetSpread(perBand = 8): Promise<CatalogItem[]> {
   return bands.flatMap((b) => b.items.slice(0, perBand)).sort((a, b) => b.price - a.price);
 }
 
+export type ActivityKind = "sold" | "listed" | "price_drop";
+
+export interface ActivityEvent {
+  id: string;
+  kind: ActivityKind;
+  skinId: string;
+  name: string;
+  weapon: string;
+  exterior: ExteriorCode;
+  rarityColor: string;
+  imageUrl: string | null;
+  price: number;
+  discountPct: number | null;
+  at: string; // ISO timestamp — rendered as relative time on the client
+}
+
+// Real marketplace events, newest first: listings that flipped to `sold`, fresh
+// listings, and steep undercuts. Shaped so a websocket/API feed can replace the
+// initial server payload without touching the component.
+export async function getMarketActivity(limit = 20): Promise<ActivityEvent[]> {
+  const select = {
+    id: true,
+    exterior: true,
+    price: true,
+    discountPct: true,
+    imageUrl: true,
+    createdAt: true,
+    updatedAt: true,
+    skin: { select: { id: true, name: true, weapon: true, rarityColor: true, imageUrl: true } },
+  } as const;
+
+  const [sold, listed, drops] = await Promise.all([
+    prisma.skinListing.findMany({
+      where: { status: "sold" },
+      orderBy: { updatedAt: "desc" },
+      take: limit,
+      select,
+    }),
+    prisma.skinListing.findMany({
+      where: { status: "available" },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      select,
+    }),
+    prisma.skinListing.findMany({
+      where: { status: "available", discountPct: { gte: 15 } },
+      orderBy: { discountPct: "desc" },
+      take: limit,
+      select,
+    }),
+  ]);
+
+  const toEvent = (
+    row: (typeof listed)[number],
+    kind: ActivityKind,
+    at: Date,
+  ): ActivityEvent => ({
+    id: `${kind}-${row.id}`,
+    kind,
+    skinId: row.skin.id,
+    name: row.skin.name,
+    weapon: row.skin.weapon,
+    exterior: row.exterior as ExteriorCode,
+    rarityColor: row.skin.rarityColor,
+    imageUrl: row.imageUrl ?? row.skin.imageUrl,
+    price: Number(row.price),
+    discountPct: row.discountPct,
+    at: at.toISOString(),
+  });
+
+  const events = [
+    ...sold.map((r) => toEvent(r, "sold", r.updatedAt)),
+    ...listed.map((r) => toEvent(r, "listed", r.createdAt)),
+    ...drops.map((r) => toEvent(r, "price_drop", r.updatedAt)),
+  ];
+
+  const seen = new Set<string>();
+  return events
+    .filter((e) => (seen.has(e.skinId + e.kind) ? false : seen.add(e.skinId + e.kind)))
+    .sort((a, b) => b.at.localeCompare(a.at))
+    .slice(0, limit);
+}
+
+export interface MarketPulse {
+  activeListings: number;
+  avgPrice: number;
+  listedToday: number;
+  soldCount: number;
+  soldVolume: number;
+  topWeapon: { weapon: string; listings: number } | null;
+  supplyTrend: { date: string; count: number }[];
+  growthPct: number;
+}
+
+const PULSE_TREND_DAYS = 14;
+
+// Everything the market dashboard needs, from real rows only. Sales figures come
+// from listings that actually flipped to `sold`; if nothing has sold yet they
+// stay at zero rather than being invented.
+export async function getMarketPulse(): Promise<MarketPulse> {
+  const since = new Date();
+  since.setUTCHours(0, 0, 0, 0);
+  since.setUTCDate(since.getUTCDate() - (PULSE_TREND_DAYS - 1));
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
+
+  const [priceAgg, activeListings, listedToday, soldAgg, weapons, trendRows] = await Promise.all([
+    prisma.skinListing.aggregate({ where: { status: "available" }, _avg: { price: true } }),
+    prisma.skinListing.count({ where: { status: "available" } }),
+    prisma.skinListing.count({ where: { status: "available", createdAt: { gte: todayStart } } }),
+    prisma.skinListing.aggregate({
+      where: { status: "sold" },
+      _count: { _all: true },
+      _sum: { price: true },
+    }),
+    prisma.skin.groupBy({
+      by: ["weapon"],
+      where: { listingCount: { gt: 0 } },
+      _sum: { listingCount: true },
+      orderBy: { _sum: { listingCount: "desc" } },
+      take: 1,
+    }),
+    prisma.skinListing.findMany({
+      where: { createdAt: { gte: since } },
+      select: { createdAt: true },
+      take: 5000,
+    }),
+  ]);
+
+  const byDay = new Map<string, number>();
+  for (let i = 0; i < PULSE_TREND_DAYS; i++) {
+    const d = new Date(since);
+    d.setUTCDate(since.getUTCDate() + i);
+    byDay.set(d.toISOString().slice(0, 10), 0);
+  }
+  for (const row of trendRows) {
+    const key = row.createdAt.toISOString().slice(0, 10);
+    if (byDay.has(key)) byDay.set(key, (byDay.get(key) ?? 0) + 1);
+  }
+  const supplyTrend = [...byDay.entries()].map(([date, count]) => ({ date, count }));
+
+  const firstHalf = supplyTrend.slice(0, Math.floor(PULSE_TREND_DAYS / 2));
+  const secondHalf = supplyTrend.slice(Math.floor(PULSE_TREND_DAYS / 2));
+  const sum = (rows: { count: number }[]) => rows.reduce((acc, r) => acc + r.count, 0);
+  const before = sum(firstHalf);
+  const after = sum(secondHalf);
+
+  return {
+    activeListings,
+    avgPrice: Number(priceAgg._avg.price ?? 0),
+    listedToday,
+    soldCount: soldAgg._count._all,
+    soldVolume: Number(soldAgg._sum.price ?? 0),
+    topWeapon: weapons[0]
+      ? { weapon: weapons[0].weapon, listings: weapons[0]._sum.listingCount ?? 0 }
+      : null,
+    supplyTrend,
+    growthPct: before > 0 ? ((after - before) / before) * 100 : 0,
+  };
+}
+
+export interface TrendingSet {
+  key: string;
+  label: string;
+  items: CatalogItem[];
+}
+
+// The five curated rails behind the trending carousel.
+export async function getTrendingSets(perSet = 12): Promise<TrendingSet[]> {
+  const [hot, expensive, fresh, knives, budget] = await Promise.all([
+    queryCatalog({ sort: "discount", perPage: perSet }),
+    queryCatalog({ sort: "price_desc", perPage: perSet }),
+    queryCatalog({ sort: "newest", perPage: perSet }),
+    queryCatalog({ categories: ["Knives"], sort: "price_desc", perPage: perSet }),
+    queryCatalog({ priceMax: 25, sort: "discount", perPage: perSet }),
+  ]);
+
+  return [
+    { key: "hot", label: "Trending now", items: hot.items },
+    { key: "expensive", label: "Most expensive", items: expensive.items },
+    { key: "fresh", label: "Recently added", items: fresh.items },
+    { key: "knives", label: "Popular knives", items: knives.items },
+    { key: "budget", label: "Under $25", items: budget.items },
+  ];
+}
+
+export interface Collection {
+  key: string;
+  title: string;
+  blurb: string;
+  href: string;
+  count: number;
+  covers: string[];
+  accent: string;
+}
+
+// Curated entry points into the catalog. Counts and cover art are read from the
+// catalog itself so a collection never advertises items that aren't listed.
+export async function getCollections(): Promise<Collection[]> {
+  const defs = [
+    {
+      key: "knives",
+      title: "The knife vault",
+      blurb: "Every listed blade, from Gut to Karambit.",
+      href: "/catalog?category=Knives&sort=price_desc",
+      filters: { categories: ["Knives"], sort: "price_desc" },
+      accent: "var(--color-rarity-gold)",
+    },
+    {
+      key: "budget",
+      title: "Full loadout under $100",
+      blurb: "Rifles, pistols and SMGs that leave change.",
+      href: "/catalog?priceMax=100&sort=discount",
+      filters: { priceMax: 100, sort: "discount" },
+      accent: "var(--color-accent)",
+    },
+    {
+      key: "covert",
+      title: "Red inventory",
+      blurb: "Covert-tier skins — the loudest tier in the game.",
+      href: "/catalog?rarity=Covert&sort=price_desc",
+      filters: { rarities: ["Covert"], sort: "price_desc" },
+      accent: "var(--color-rarity-covert)",
+    },
+    {
+      key: "gloves",
+      title: "Hands on",
+      blurb: "Glove finishes that tie a loadout together.",
+      href: "/catalog?category=Gloves&sort=price_desc",
+      filters: { categories: ["Gloves"], sort: "price_desc" },
+      accent: "var(--color-rarity-restricted)",
+    },
+    {
+      key: "factory-new",
+      title: "Factory New only",
+      blurb: "Untouched floats, straight out of the case.",
+      href: "/catalog?exterior=FN&sort=discount",
+      filters: { exteriors: ["FN" as ExteriorCode], sort: "discount" },
+      accent: "var(--color-success)",
+    },
+    {
+      key: "stattrak",
+      title: "StatTrak™ counters",
+      blurb: "Track every kill on the skins you play with.",
+      href: "/catalog?statTrak=1&sort=discount",
+      filters: { statTrak: true, sort: "discount" },
+      accent: "var(--color-warning)",
+    },
+  ];
+
+  return Promise.all(
+    defs.map(async (d) => {
+      const res = await queryCatalog({ ...d.filters, perPage: 12 });
+      return {
+        key: d.key,
+        title: d.title,
+        blurb: d.blurb,
+        href: d.href,
+        accent: d.accent,
+        count: res.total,
+        covers: res.items
+          .map((i) => i.imageUrl)
+          .filter((u): u is string => Boolean(u))
+          .slice(0, 3),
+      };
+    }),
+  );
+}
+
+export interface LoadoutSlotPool {
+  slot: string;
+  label: string;
+  items: CatalogItem[];
+}
+
+// Cheapest-first candidates per loadout slot so the builder always starts from
+// something affordable and the totals stay realistic.
+export async function getLoadoutPools(perSlot = 8): Promise<LoadoutSlotPool[]> {
+  const slots: { slot: string; label: string; categories: string[] }[] = [
+    { slot: "knife", label: "Knife", categories: ["Knives"] },
+    { slot: "gloves", label: "Gloves", categories: ["Gloves"] },
+    { slot: "rifle", label: "Rifle", categories: ["Rifles"] },
+    { slot: "pistol", label: "Pistol", categories: ["Pistols"] },
+  ];
+
+  return Promise.all(
+    slots.map(async (s) => ({
+      slot: s.slot,
+      label: s.label,
+      items: (await queryCatalog({ categories: s.categories, sort: "discount" })).items.slice(
+        0,
+        perSlot,
+      ),
+    })),
+  );
+}
+
+// A broad, rarity- and category-diverse sample used by the client-side explorer
+// and the comparison tool so both can filter instantly without a round trip.
+export async function getExplorerPool(perCategory = 18): Promise<CatalogItem[]> {
+  const categories = Object.keys(CATEGORY_LABELS);
+  const results = await Promise.all(
+    categories.map((category) => queryCatalog({ categories: [category], sort: "discount" })),
+  );
+  return results.flatMap((r) => r.items.slice(0, perCategory));
+}
+
 export interface RarityBucket {
   rarity: string;
   count: number;
@@ -495,4 +802,56 @@ export async function getRarityBreakdown(): Promise<RarityBucket[]> {
     count: r._count._all,
     fromPrice: r._min.lowestPrice != null ? Number(r._min.lowestPrice) : null,
   }));
+}
+
+export interface Highlight {
+  key: string;
+  label: string;
+  note: string;
+  item: CatalogItem;
+}
+
+/**
+ * Today's standout listings. Every entry is a real listing picked by a real
+ * measurable property — no scores, streaks or rewards are invented.
+ */
+export async function getDailyHighlights(): Promise<Highlight[]> {
+  const [discount, priciest, lowFloat, knife] = await Promise.all([
+    queryCatalog({ sort: "discount", perPage: 12 }),
+    queryCatalog({ sort: "price_desc", perPage: 12 }),
+    queryCatalog({ exteriors: ["FN"], sort: "price_asc", perPage: 12 }),
+    queryCatalog({ categories: ["Knives"], sort: "price_asc", perPage: 12 }),
+  ]);
+
+  const picks: (Highlight | null)[] = [
+    discount.items[0] && {
+      key: "discount",
+      label: "Sharpest discount",
+      note: `${(discount.items[0].discountPct ?? 0).toFixed(1)}% below Steam`,
+      item: discount.items[0],
+    },
+    priciest.items[0] && {
+      key: "grail",
+      label: "Grail of the day",
+      note: priciest.items[0].rarity,
+      item: priciest.items[0],
+    },
+    lowFloat.items[0] && {
+      key: "float",
+      label: "Cheapest Factory New",
+      note:
+        lowFloat.items[0].float != null
+          ? `float ${lowFloat.items[0].float.toFixed(4)}`
+          : "Factory New",
+      item: lowFloat.items[0],
+    },
+    knife.items[0] && {
+      key: "knife",
+      label: "Entry-level knife",
+      note: "Lowest-priced knife listed",
+      item: knife.items[0],
+    },
+  ];
+
+  return picks.filter((p): p is Highlight => p != null);
 }

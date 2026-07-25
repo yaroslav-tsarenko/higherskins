@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@/i18n/routing";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import type { PriceMover } from "@/lib/skins/queries";
+import { Panel } from "./Section";
 
 function Sparkline({ points, color }: { points: number[]; color: string }) {
   if (points.length < 2) return null;
@@ -85,7 +86,7 @@ export function TopMovers({ gainers, losers }: { gainers: PriceMover[]; losers: 
   if (!list.length) return null;
 
   return (
-    <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-4 sm:p-5">
+    <Panel>
       <div className="mb-3 flex items-center gap-2">
         {(["gainers", "losers"] as const).map((key) => (
           <button
@@ -126,6 +127,6 @@ export function TopMovers({ gainers, losers }: { gainers: PriceMover[]; losers: 
           ))}
         </motion.div>
       </AnimatePresence>
-    </div>
+    </Panel>
   );
 }

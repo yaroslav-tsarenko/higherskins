@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Link } from "@/i18n/routing";
 import { ArrowRight, Wallet } from "lucide-react";
 import type { CatalogItem } from "@/lib/skins/queries";
+import { Panel } from "./Section";
 
 const MIN = 1;
 const MAX = 5000;
@@ -32,7 +33,7 @@ export function BudgetFinder({ pool }: { pool: CatalogItem[] }) {
   if (!pool.length) return null;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-5 sm:p-6">
+    <Panel className="relative">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-70"
@@ -42,17 +43,17 @@ export function BudgetFinder({ pool }: { pool: CatalogItem[] }) {
         }}
       />
 
-      <div className="relative grid gap-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+      <div className="relative flex flex-1 flex-col">
         <div>
           <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
             <Wallet size={13} /> Budget finder
           </div>
-          <h3 className="mt-1 font-display text-2xl font-extrabold tracking-tight text-[color:var(--color-text)]">
+          <h3 className="mt-1 font-display text-xl font-extrabold tracking-tight text-[color:var(--color-text)]">
             What can I get for{" "}
             <span className="spec-value text-[color:var(--color-primary)]">${budget}</span>?
           </h3>
 
-          <label className="mt-5 block">
+          <label className="mt-4 block">
             <span className="sr-only">Budget</span>
             <input
               type="range"
@@ -85,22 +86,9 @@ export function BudgetFinder({ pool }: { pool: CatalogItem[] }) {
             ))}
           </div>
 
-          <p className="mt-4 text-[13px] text-[color:var(--color-text-secondary)]">
-            <span className="spec-value font-bold text-[color:var(--color-text)]">
-              {affordable.length}
-            </span>{" "}
-            of {pool.length} sampled listings fit this budget.
-          </p>
-
-          <Link
-            href={`/catalog?priceMax=${budget}&sort=discount`}
-            className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[color:var(--color-primary)] px-4 py-2.5 text-[13px] font-bold text-[color:var(--color-primary-fg)] transition-colors hover:bg-[color:var(--color-primary-hover)]"
-          >
-            Shop under ${budget} <ArrowRight size={14} />
-          </Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {picks.map((item) => (
             <motion.div
               key={item.listingId}
@@ -143,7 +131,22 @@ export function BudgetFinder({ pool }: { pool: CatalogItem[] }) {
             </p>
           )}
         </div>
+
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--color-border)] pt-4">
+          <p className="text-[13px] text-[color:var(--color-text-secondary)]">
+            <span className="spec-value font-bold text-[color:var(--color-text)]">
+              {affordable.length}
+            </span>{" "}
+            of {pool.length} sampled listings fit this budget.
+          </p>
+          <Link
+            href={`/catalog?priceMax=${budget}&sort=discount`}
+            className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--color-primary)] px-4 py-2.5 text-[13px] font-bold text-[color:var(--color-primary-fg)] transition-colors hover:bg-[color:var(--color-primary-hover)]"
+          >
+            Shop under ${budget} <ArrowRight size={14} />
+          </Link>
+        </div>
       </div>
-    </div>
+    </Panel>
   );
 }

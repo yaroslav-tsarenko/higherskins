@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { Link } from "@/i18n/routing";
-import { prisma } from "@/lib/prisma";
 import { JsonLd } from "@/components/shared/SEO/JsonLd";
 import {
   getMarketStats,
@@ -10,12 +8,26 @@ import {
   getCategoryShowcase,
   getTopMovers,
   getBudgetSpread,
+  getMarketPulse,
+  getMarketActivity,
+  getTrendingSets,
+  getCollections,
+  getLoadoutPools,
+  getExplorerPool,
+  getDailyHighlights,
 } from "@/lib/skins/queries";
-import { buildPriceHistory } from "@/lib/skins/pricing";
 import { SkinCard } from "@/components/skins/SkinCard";
-import { PriceChart } from "@/components/skins/PriceChart";
-import { CountUp } from "@/components/home/CountUp";
+import { Section, SectionHead } from "@/components/home/Section";
+import { HeroMarketplace } from "@/components/home/HeroMarketplace";
 import { MarketTicker } from "@/components/home/MarketTicker";
+import { LiveActivityFeed } from "@/components/home/LiveActivityFeed";
+import { MarketDashboard } from "@/components/home/MarketDashboard";
+import { TrendingCarousel } from "@/components/home/TrendingCarousel";
+import { SkinExplorer } from "@/components/home/SkinExplorer";
+import { FeaturedCollections } from "@/components/home/FeaturedCollections";
+import { LoadoutBuilder } from "@/components/home/LoadoutBuilder";
+import { SkinCompare } from "@/components/home/SkinCompare";
+import { DailyHighlights } from "@/components/home/DailyHighlights";
 import { RarityExplorer } from "@/components/home/RarityExplorer";
 import { WearSlider } from "@/components/home/WearSlider";
 import { CategoryShowcase } from "@/components/home/CategoryShowcase";
@@ -25,22 +37,20 @@ import { HowItWorksSteps } from "@/components/home/HowItWorksSteps";
 import { FaqAccordion } from "@/components/home/FaqAccordion";
 import { brand } from "@/lib/brand";
 import {
-  ArrowRight,
-  Layers,
-  Percent,
-  TrendingUp,
-  Wallet,
-  Flame,
-  Sparkles,
-  Gem,
-  Radio,
-  Diamond,
-  ShieldCheck,
-  Zap,
-  Crosshair,
   Activity,
-  Route,
+  BarChart3,
+  Crosshair,
+  Diamond,
+  Flame,
   HelpCircle,
+  Layers,
+  Radio,
+  Route,
+  Sparkles,
+  SlidersHorizontal,
+  Swords,
+  Trophy,
+  Wallet,
 } from "lucide-react";
 
 export const revalidate = 60;
@@ -59,80 +69,44 @@ export async function generateMetadata({ params }: HomePageProps): Promise<Metad
   };
 }
 
-async function getFeaturedSkin() {
-  const dragon = await prisma.skin.findFirst({
-    where: { name: { contains: "Dragon Lore", mode: "insensitive" }, listingCount: { gt: 0 } },
-    orderBy: { lowestPrice: "desc" },
-    select: { id: true, externalId: true, name: true, weapon: true, lowestPrice: true, imageUrl: true, rarityColor: true },
-  });
-  if (dragon) return dragon;
-  return prisma.skin.findFirst({
-    where: { listingCount: { gt: 0 } },
-    orderBy: { lowestPrice: "desc" },
-    select: { id: true, externalId: true, name: true, weapon: true, lowestPrice: true, imageUrl: true, rarityColor: true },
-  });
-}
-
-function SectionHeader({
-  icon: Icon,
-  eyebrow,
-  title,
-  href,
-  cta,
-}: {
-  icon: React.ElementType;
-  eyebrow: string;
-  title: string;
-  href: string;
-  cta: string;
-}) {
-  return (
-    <div className="mb-4 flex items-end justify-between gap-3">
-      <div>
-        <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
-          <Icon size={13} /> {eyebrow}
-        </div>
-        <h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight text-[color:var(--color-text)]">
-          {title}
-        </h2>
-      </div>
-      <Link
-        href={href}
-        className="inline-flex shrink-0 items-center gap-1.5 text-[13px] font-semibold text-[color:var(--color-primary)] hover:underline"
-      >
-        {cta} <ArrowRight size={14} />
-      </Link>
-    </div>
-  );
-}
-
 export default async function HomePage({ params }: HomePageProps) {
   const { locale } = await params;
 
-  const [stats, featured, deals, fresh, highTier, recent, rarities, categories, movers, budgetPool] =
-    await Promise.all([
-      getMarketStats(),
-      getFeaturedSkin(),
-      queryCatalog({ sort: "discount", perPage: 10 }),
-      queryCatalog({ sort: "newest", perPage: 10 }),
-      queryCatalog({ categories: ["Knives", "Gloves"], sort: "price_desc", perPage: 8 }),
-      getRecentListings(18),
-      getRarityBreakdown(),
-      getCategoryShowcase(),
-      getTopMovers(),
-      getBudgetSpread(),
-    ]);
+  const [
+    stats,
+    pulse,
+    activity,
+    trending,
+    collections,
+    loadout,
+    explorerPool,
+    highlights,
+    deals,
+    fresh,
+    recent,
+    rarities,
+    categories,
+    movers,
+    budgetPool,
+  ] = await Promise.all([
+    getMarketStats(),
+    getMarketPulse(),
+    getMarketActivity(),
+    getTrendingSets(),
+    getCollections(),
+    getLoadoutPools(),
+    getExplorerPool(),
+    getDailyHighlights(),
+    queryCatalog({ sort: "discount", perPage: 12 }),
+    queryCatalog({ sort: "newest", perPage: 12 }),
+    getRecentListings(18),
+    getRarityBreakdown(),
+    getCategoryShowcase(),
+    getTopMovers(),
+    getBudgetSpread(),
+  ]);
 
-  const history = featured
-    ? buildPriceHistory(featured.externalId, Number(featured.lowestPrice ?? 1), 365)
-    : [];
-
-  const statItems = [
-    { icon: Layers, label: "Items listed", value: stats.totalListings, decimals: 0, prefix: "", suffix: "" },
-    { icon: Wallet, label: "Market value", value: Math.round(stats.marketValue), decimals: 0, prefix: "$", suffix: "" },
-    { icon: Percent, label: "Avg discount", value: stats.avgDiscountPct, decimals: 1, prefix: "", suffix: "%" },
-    { icon: TrendingUp, label: "Unique skins", value: stats.totalSkins, decimals: 0, prefix: "", suffix: "" },
-  ];
+  const floaters = deals.items.slice(0, 3);
 
   return (
     <>
@@ -149,278 +123,194 @@ export default async function HomePage({ params }: HomePageProps) {
         }}
       />
 
-      <div className="mx-auto w-full max-w-[1320px] px-4 py-8 sm:px-6 lg:px-8">
-        {/* ── Hero ─────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-6 sm:p-10 lg:p-12">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 opacity-70"
-            style={{
-              background:
-                "radial-gradient(60% 80% at 85% 10%, rgba(124,58,237,0.22) 0%, transparent 60%), radial-gradient(50% 60% at 10% 100%, rgba(34,211,238,0.16) 0%, transparent 60%)",
-            }}
-          />
-          <div className="relative grid items-center gap-8 lg:grid-cols-[1.15fr_0.85fr]">
-            <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--color-primary-tint)] px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--color-primary)]">
-                <Zap size={12} /> Instant Steam trades
-              </span>
-              <h1 className="mt-4 font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-[color:var(--color-text)] sm:text-5xl">
-                Buy &amp; sell CS2 skins.{" "}
-                <span className="bg-gradient-to-r from-[color:var(--color-primary)] to-[color:var(--color-accent)] bg-clip-text text-transparent">
-                  Instantly.
-                </span>
-              </h1>
-              <p className="mt-4 max-w-lg text-[15.5px] leading-relaxed text-[color:var(--color-text-secondary)]">
-                Thousands of skins with live float, pattern and cross-market price
-                data. Trade straight from your Steam inventory — fast, fair, secure.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Link
-                  href="/catalog"
-                  className="inline-flex h-12 items-center gap-2 rounded-full bg-[color:var(--color-primary)] px-6 text-sm font-bold text-white shadow-[var(--shadow-glow-violet)] transition hover:brightness-110"
-                >
-                  Browse the market <ArrowRight size={16} />
-                </Link>
-                <Link
-                  href="/sell"
-                  className="inline-flex h-12 items-center gap-2 rounded-full border border-[color:var(--color-border)] px-6 text-sm font-bold text-[color:var(--color-text)] transition hover:border-[color:var(--color-primary)]"
-                >
-                  <Wallet size={16} /> Sell your skins
-                </Link>
-              </div>
-              <div className="mt-5 flex items-center gap-2 text-[13px] text-[color:var(--color-text-tertiary)]">
-                <ShieldCheck size={15} className="text-[color:var(--color-accent)]" />
-                Buyer protection on every trade · No password ever shared
-              </div>
-            </div>
+      <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-12 px-4 py-8 sm:px-6 lg:px-8">
+        <HeroMarketplace stats={stats} listedToday={pulse.listedToday} floaters={floaters} />
 
-            {/* Featured high-tier showcase */}
-            {featured && (
-              <Link
-                href={`/skin/${featured.id}`}
-                className="card-lift group relative flex flex-col overflow-hidden rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg)]"
-                style={{ ["--rarity" as string]: featured.rarityColor }}
-              >
-                <div className="rarity-strip h-[3px] w-full" />
-                <div className="relative aspect-[16/10] overflow-hidden tech-grid">
-                  <div
-                    className="pointer-events-none absolute inset-0"
-                    style={{
-                      background: `radial-gradient(120% 90% at 50% 120%, ${featured.rarityColor}2e 0%, transparent 60%)`,
-                    }}
-                  />
-                  {featured.imageUrl && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={featured.imageUrl}
-                      alt={featured.name}
-                      className="absolute inset-0 h-full w-full object-contain p-6 transition-transform duration-500 group-hover:scale-105"
-                    />
-                  )}
-                  <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/50 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-white backdrop-blur">
-                    <Gem size={11} /> Featured
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-3 p-4">
-                  <div className="min-w-0">
-                    <div className="truncate font-display text-[15px] font-bold text-[color:var(--color-text)]">
-                      {featured.name}
-                    </div>
-                    <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-[color:var(--color-text-tertiary)]">
-                      {featured.weapon}
-                    </div>
-                  </div>
-                  {featured.lowestPrice != null && (
-                    <div className="shrink-0 text-right">
-                      <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-[color:var(--color-text-tertiary)]">
-                        from
-                      </div>
-                      <div className="font-display text-lg font-extrabold tabular-nums text-[color:var(--color-accent)]">
-                        ${Number(featured.lowestPrice).toFixed(2)}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </Link>
-            )}
-          </div>
-
-          {/* Stats strip */}
-          <div className="relative mt-8 grid grid-cols-2 gap-3 border-t border-[color:var(--color-border)] pt-6 lg:grid-cols-4">
-            {statItems.map((s) => (
-              <div key={s.label} className="flex items-center gap-3">
-                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color:var(--color-primary-tint)] text-[color:var(--color-primary)]">
-                  <s.icon size={18} />
-                </span>
-                <div>
-                  <CountUp
-                    value={s.value}
-                    decimals={s.decimals}
-                    prefix={s.prefix}
-                    suffix={s.suffix}
-                    className="font-display text-xl font-extrabold tabular-nums leading-none text-[color:var(--color-text)]"
-                  />
-                  <div className="mt-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--color-text-tertiary)]">
-                    {s.label}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Live market ticker ───────────────────────────────── */}
-        <section className="mt-8">
+        <Section>
           <div className="mb-3 flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--color-accent)]">
             <Radio size={13} /> Live market · newest listings
           </div>
           <MarketTicker items={recent} />
-        </section>
+        </Section>
 
-        {/* ── Browse by category ───────────────────────────────── */}
-        <section className="mt-12">
-          <SectionHeader
+        <Section id="market-pulse">
+          <SectionHead
+            icon={BarChart3}
+            eyebrow="Market pulse"
+            title="Marketplace at a glance"
+            description="Live numbers pulled straight from the listing book — supply, pricing and settled trades update as the market moves."
+            href="/analytics"
+            cta="Full analytics"
+          />
+          <MarketDashboard pulse={pulse} />
+        </Section>
+
+        <Section id="trending">
+          <SectionHead
+            icon={Flame}
+            eyebrow="What's moving"
+            title="Trending right now"
+            description="Curated shelves rebuilt every minute from live listings — discounts, grails, fresh drops and knives."
+            href="/catalog?sort=discount"
+            cta="Open catalog"
+          />
+          <TrendingCarousel sets={trending} />
+        </Section>
+
+        <Section id="explorer">
+          <SectionHead
+            icon={SlidersHorizontal}
+            eyebrow="Find your skin"
+            title="Interactive skin explorer"
+            description="Stack filters across category, rarity, wear and price, then carry the exact same query into the full catalog."
+          />
+          <SkinExplorer pool={explorerPool} />
+        </Section>
+
+        <Section id="activity">
+          <SectionHead
+            icon={Activity}
+            eyebrow="Market insights"
+            title="Live activity & 7-day movers"
+            description="Every event below is a real listing state change. Movers compare each skin against its own price a week ago."
+            href="/analytics"
+            cta="See analytics"
+          />
+          <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
+            <LiveActivityFeed events={activity} />
+            <TopMovers gainers={movers.gainers} losers={movers.losers} />
+          </div>
+        </Section>
+
+        <Section id="highlights">
+          <SectionHead
+            icon={Trophy}
+            eyebrow="Daily highlights"
+            title="Standouts on the board today"
+            description="Four listings picked by measurable properties: deepest discount, highest value, cheapest Factory New and the entry-level knife."
+          />
+          <DailyHighlights highlights={highlights} />
+        </Section>
+
+        <Section id="collections">
+          <SectionHead
+            icon={Layers}
+            eyebrow="Curated shelves"
+            title="Featured collections"
+            description="Hand-built entry points into the catalog, each backed by a live listing count."
+            href="/catalog"
+            cta="Browse everything"
+          />
+          <FeaturedCollections collections={collections} />
+        </Section>
+
+        <Section id="deals">
+          <SectionHead
+            icon={Flame}
+            eyebrow="Best value"
+            title="Biggest discounts"
+            description="Listings priced furthest below their Steam reference price."
+            href="/catalog?sort=discount"
+            cta="See all deals"
+          />
+          <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-6">
+            {deals.items.slice(0, 6).map((item) => (
+              <SkinCard key={item.listingId} item={item} locale={locale} />
+            ))}
+          </div>
+        </Section>
+
+        <Section id="loadout">
+          <SectionHead
+            icon={Swords}
+            eyebrow="Plan your kit"
+            title="Loadout builder & comparison"
+            description="Assemble a four-slot loadout from real listings, or put two of them side by side on price, rarity, float and discount."
+          />
+          <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
+            <LoadoutBuilder pools={loadout} />
+            <SkinCompare pool={explorerPool} />
+          </div>
+        </Section>
+
+        <Section id="categories">
+          <SectionHead
             icon={Crosshair}
             eyebrow="Browse by type"
             title="Weapon categories"
+            description="Jump straight into rifles, pistols, SMGs, heavies, knives or gloves."
             href="/catalog"
             cta="Open catalog"
           />
           <CategoryShowcase groups={categories} locale={locale} />
-        </section>
+        </Section>
 
-        {/* ── Best deals ───────────────────────────────────────── */}
-        <section className="mt-12">
-          <SectionHeader
-            icon={Flame}
-            eyebrow="Best value"
-            title="Biggest discounts"
-            href="/catalog?sort=discount"
-            cta="See all deals"
+        <Section id="rarity">
+          <SectionHead
+            icon={Diamond}
+            eyebrow="Know the market"
+            title="Rarity tiers & float bands"
+            description="How supply spreads across CS2 rarity tiers, and how a float value maps to the wear band you see on every listing."
+            href="/faq"
+            cta="Read the guide"
           />
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {deals.items.map((item) => (
-              <SkinCard key={item.listingId} item={item} locale={locale} />
-            ))}
-          </div>
-        </section>
-
-        {/* ── Price chart teaser + high tier ───────────────────── */}
-        <section className="mt-12 grid gap-6 lg:grid-cols-[1fr_1fr]">
-          <div>
-            <SectionHeader
-              icon={TrendingUp}
-              eyebrow="Market pulse"
-              title={featured ? featured.name.split(" | ")[0] || "Price history" : "Price history"}
-              href="/analytics"
-              cta="Open analytics"
-            />
-            {history.length > 0 && <PriceChart history={history} />}
-          </div>
-          <div>
-            <SectionHeader
-              icon={Gem}
-              eyebrow="High tier"
-              title="Knives & gloves"
-              href="/catalog?category=Knives,Gloves"
-              cta="Browse rare"
-            />
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-              {highTier.items.slice(0, 4).map((item) => (
-                <SkinCard key={item.listingId} item={item} locale={locale} />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Rarity explorer + wear demo ──────────────────────── */}
-        <section className="mt-12 grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch">
-          <div className="flex flex-col">
-            <SectionHeader
-              icon={Diamond}
-              eyebrow="Explore by tier"
-              title="Rarity breakdown"
-              href="/catalog"
-              cta="Open catalog"
-            />
+          <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
             <RarityExplorer buckets={rarities} />
-          </div>
-          <div className="flex flex-col">
-            <SectionHeader
-              icon={Radio}
-              eyebrow="Know your float"
-              title="Wear & float"
-              href="/faq"
-              cta="Learn more"
-            />
             <WearSlider />
           </div>
-        </section>
+        </Section>
 
-        {/* ── Market movers + budget finder ────────────────────── */}
-        <section className="mt-12 grid gap-6 lg:grid-cols-[1fr_1fr]">
-          <div className="flex flex-col">
-            <SectionHeader
-              icon={Activity}
-              eyebrow="Market insights"
-              title="Top movers"
-              href="/analytics"
-              cta="Full analytics"
-            />
-            <TopMovers gainers={movers.gainers} losers={movers.losers} />
-          </div>
-          <div className="flex flex-col">
-            <SectionHeader
-              icon={Wallet}
-              eyebrow="Shop by budget"
-              title="Set your price"
-              href="/catalog?sort=price_asc"
-              cta="Browse cheapest"
-            />
-            <BudgetFinder pool={budgetPool} />
-          </div>
-        </section>
+        <Section id="budget">
+          <SectionHead
+            icon={Wallet}
+            eyebrow="Shop by budget"
+            title="Set your price"
+            description="Drag a budget and see what the market actually offers in that range."
+            href="/catalog?sort=price_asc"
+            cta="Browse cheapest"
+          />
+          <BudgetFinder pool={budgetPool} />
+        </Section>
 
-        {/* ── New listings ─────────────────────────────────────── */}
-        <section className="mt-12">
-          <SectionHeader
+        <Section id="fresh">
+          <SectionHead
             icon={Sparkles}
             eyebrow="Fresh drops"
             title="New listings"
+            description="The most recent items added to the marketplace."
             href="/catalog?sort=newest"
             cta="See what's new"
           />
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {fresh.items.map((item) => (
+          <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-6">
+            {fresh.items.slice(0, 6).map((item) => (
               <SkinCard key={item.listingId} item={item} locale={locale} />
             ))}
           </div>
-        </section>
+        </Section>
 
-        {/* ── How it works ─────────────────────────────────────── */}
-        <section className="mt-12">
-          <SectionHeader
+        <Section id="how-it-works">
+          <SectionHead
             icon={Route}
             eyebrow="Getting started"
             title="How trading works"
+            description="Three steps from browsing to the trade landing in your Steam inventory."
             href="/how-it-works"
             cta="Full walkthrough"
           />
           <HowItWorksSteps />
-        </section>
+        </Section>
 
-        {/* ── FAQ ──────────────────────────────────────────────── */}
-        <section className="mt-12">
-          <SectionHeader
+        <Section id="faq">
+          <SectionHead
             icon={HelpCircle}
             eyebrow="Good to know"
             title="Common questions"
+            description="Trade speed, buyer protection, payouts and float — answered."
             href="/faq"
             cta="All answers"
           />
           <FaqAccordion />
-        </section>
+        </Section>
       </div>
     </>
   );

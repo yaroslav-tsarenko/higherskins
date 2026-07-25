@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus } from "lucide-react";
+import { Panel } from "./Section";
 
 const ITEMS = [
   {
@@ -31,7 +32,7 @@ export function FaqAccordion() {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <div className="divide-y divide-[color:var(--color-border)] overflow-hidden rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)]">
+    <Panel padded={false} className="divide-y divide-[color:var(--color-border)]">
       {ITEMS.map((item, i) => {
         const isOpen = open === i;
         return (
@@ -70,6 +71,6 @@ export function FaqAccordion() {
           </div>
         );
       })}
-    </div>
+    </Panel>
   );
 }

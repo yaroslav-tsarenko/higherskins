@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@/i18n/routing";
 import { ArrowRight, Search, ShieldCheck, Repeat } from "lucide-react";
+import { Panel } from "./Section";
 
 const STEPS = [
   {
@@ -35,7 +36,8 @@ export function HowItWorksSteps() {
   const Icon = step.icon;
 
   return (
-    <div className="grid gap-4 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-5 lg:grid-cols-[1fr_1.05fr] lg:items-center">
+    <Panel>
+      <div className="grid flex-1 gap-4 lg:grid-cols-[1fr_1.05fr] lg:items-center">
       <div className="flex flex-col gap-2">
         {STEPS.map((s, i) => {
           const isActive = i === active;
@@ -107,6 +109,7 @@ export function HowItWorksSteps() {
           </div>
         </motion.div>
       </AnimatePresence>
-    </div>
+      </div>
+    </Panel>
   );
 }

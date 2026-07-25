@@ -20,7 +20,13 @@ import {
   ChevronDown,
   Info,
   Route,
+  Swords,
+  Hand,
+  Crosshair,
+  Lock,
+  CreditCard,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { HigherskinsLogo } from "../HigherskinsLogo";
 import { brand } from "@/lib/brand";
 import { useCurrency } from "@/providers/CurrencyProvider";
@@ -42,6 +48,17 @@ const groups: Group[] = [
     ],
   },
   {
+    key: "categories",
+    title: "Categories",
+    items: [
+      { href: "/catalog?category=Knives", label: "Knives", Icon: Swords },
+      { href: "/catalog?category=Gloves", label: "Gloves", Icon: Hand },
+      { href: "/catalog?category=Rifles", label: "Rifles", Icon: Crosshair },
+      { href: "/catalog?category=Pistols", label: "Pistols", Icon: Crosshair },
+      { href: "/catalog?category=SMGs", label: "SMGs", Icon: Crosshair },
+    ],
+  },
+  {
     key: "company",
     title: "Company",
     items: [
@@ -58,6 +75,10 @@ const trustBadges = [
   { icon: ShieldCheck, label: "Buyer protection" },
   { icon: Repeat, label: "Sell for balance" },
 ];
+
+// Placeholders only — these mirror the providers the checkout is being wired
+// for, not live integrations.
+const PAYMENT_METHODS = ["Visa", "Mastercard", "Apple Pay", "Crypto"];
 
 const socialLinks = [
   { icon: FaDiscord, label: "Discord", href: "/coming-soon", external: false },
@@ -218,8 +239,20 @@ export function Footer() {
   return (
     <footer className="mt-auto" role="contentinfo">
       {/* ── Brand + navigation tier ─────────────────────────────── */}
-      <div className="relative border-t border-[color:var(--color-border)] bg-[color:var(--color-bg-secondary)] text-[color:var(--color-text)]">
-        <div className="relative mx-auto grid max-w-[1320px] gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.1fr_2fr] lg:gap-14 lg:px-8">
+      <div className="relative overflow-hidden border-t border-[color:var(--color-border)] bg-[color:var(--color-bg-secondary)] text-[color:var(--color-text)]">
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          initial={{ opacity: 0.45 }}
+          animate={{ opacity: [0.45, 0.75, 0.45] }}
+          transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
+          style={{
+            background:
+              "radial-gradient(50% 70% at 12% 0%, rgba(124,58,237,0.16) 0%, transparent 62%), radial-gradient(45% 65% at 88% 100%, rgba(34,211,238,0.12) 0%, transparent 62%)",
+          }}
+        />
+        <span aria-hidden className="pointer-events-none absolute inset-0 tech-grid opacity-40" />
+        <div className="relative mx-auto grid max-w-[1320px] gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.1fr_2.3fr] lg:gap-14 lg:px-8">
           {/* Brand block */}
           <div className="flex flex-col gap-5">
             <Link href="/" aria-label={brand.displayName}>
@@ -262,12 +295,45 @@ export function Footer() {
           </div>
 
           {/* Link groups */}
-          <div className="grid grid-cols-1 gap-x-8 gap-y-0 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-x-8 gap-y-0 md:grid-cols-2 lg:grid-cols-5">
             {groups.map((g) => (
               <LinkGroup key={g.key} group={g} />
             ))}
             <LegalGroup />
             <CommunityGroup />
+          </div>
+        </div>
+
+        {/* ── Security & payment strip ──────────────────────────── */}
+        <div className="relative mx-auto max-w-[1320px] px-4 pb-12 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] px-5 py-4">
+            <div className="flex items-center gap-2.5">
+              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-primary-tint)] text-[color:var(--color-primary)]">
+                <Lock size={15} />
+              </span>
+              <div>
+                <div className="text-[13px] font-bold text-[color:var(--color-text)]">
+                  Escrowed checkout, TLS everywhere
+                </div>
+                <div className="text-[12px] text-[color:var(--color-text-secondary)]">
+                  We never ask for your Steam password or API key — only a trade link.
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="mr-1 inline-flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--color-text-tertiary)]">
+                <CreditCard size={12} /> Payments
+              </span>
+              {PAYMENT_METHODS.map((m) => (
+                <span
+                  key={m}
+                  className="inline-flex h-8 items-center rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg)] px-2.5 font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] text-[color:var(--color-text-secondary)]"
+                >
+                  {m}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </div>

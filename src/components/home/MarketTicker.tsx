@@ -3,6 +3,7 @@
 import { Link } from "@/i18n/routing";
 import { TrendingDown } from "lucide-react";
 import type { TickerListing } from "@/lib/skins/queries";
+import { Panel } from "./Section";
 
 // Continuously scrolling strip of the newest listings. The list is rendered
 // twice so the -50% marquee loop is seamless; the animation is paused on hover
@@ -12,7 +13,7 @@ export function MarketTicker({ items }: { items: TickerListing[] }) {
   const loop = [...items, ...items];
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] py-3">
+    <Panel padded={false} className="group relative py-3">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[color:var(--color-bg-elevated)] to-transparent"
@@ -58,6 +59,6 @@ export function MarketTicker({ items }: { items: TickerListing[] }) {
           </Link>
         ))}
       </div>
-    </div>
+    </Panel>
   );
 }

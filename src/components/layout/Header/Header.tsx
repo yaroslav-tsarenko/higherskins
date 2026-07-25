@@ -21,6 +21,11 @@ import {
   Shield,
   ArrowRight,
   Loader2,
+  Swords,
+  Hand,
+  Crosshair,
+  Target,
+  Zap,
 } from "lucide-react";
 import { useAuth } from "@/providers/AuthProvider";
 import { useCurrency } from "@/providers/CurrencyProvider";
@@ -43,6 +48,15 @@ const NAV: { href: string; label: string; Icon: React.ElementType }[] = [
   { href: "/catalog", label: "Market", Icon: LayoutGrid },
   { href: "/sell", label: "Sell", Icon: Tag },
   { href: "/analytics", label: "Analytics", Icon: BarChart3 },
+];
+
+const QUICK_CATEGORIES: { value: string; label: string; Icon: React.ElementType }[] = [
+  { value: "Knives", label: "Knives", Icon: Swords },
+  { value: "Gloves", label: "Gloves", Icon: Hand },
+  { value: "Rifles", label: "Rifles", Icon: Crosshair },
+  { value: "Pistols", label: "Pistols", Icon: Target },
+  { value: "SMGs", label: "SMGs", Icon: Zap },
+  { value: "Heavy", label: "Heavy", Icon: Shield },
 ];
 
 function useDismiss(onClose: () => void) {
@@ -480,6 +494,22 @@ export function Header() {
                 </AnimatePresence>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Quick categories */}
+        <div className="border-t border-[color:var(--color-border)]">
+          <div className="mx-auto flex max-w-[1320px] items-center gap-2 overflow-x-auto px-4 py-2 [scrollbar-width:none] sm:px-6 lg:px-8 [&::-webkit-scrollbar]:hidden">
+            {QUICK_CATEGORIES.map((c) => (
+              <Link
+                key={c.value}
+                href={`/catalog?category=${encodeURIComponent(c.value)}`}
+                className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[color:var(--color-border)] px-3 text-[12.5px] font-semibold text-[color:var(--color-text-secondary)] transition-colors hover:border-[color:var(--color-primary)] hover:text-[color:var(--color-text)]"
+              >
+                <c.Icon size={13} />
+                {c.label}
+              </Link>
+            ))}
           </div>
         </div>
 

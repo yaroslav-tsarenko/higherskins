@@ -6,6 +6,7 @@ import { Link } from "@/i18n/routing";
 import { ArrowRight } from "lucide-react";
 import { SkinCard } from "@/components/skins/SkinCard";
 import type { CategoryShowcase as Showcase } from "@/lib/skins/queries";
+import { Panel } from "./Section";
 
 export function CategoryShowcase({
   groups,
@@ -20,7 +21,7 @@ export function CategoryShowcase({
   const current = groups[Math.min(active, groups.length - 1)];
 
   return (
-    <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-4 sm:p-5">
+    <Panel>
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {groups.map((g, i) => {
           const isActive = i === active;
@@ -77,6 +78,6 @@ export function CategoryShowcase({
           ))}
         </motion.div>
       </AnimatePresence>
-    </div>
+    </Panel>
   );
 }

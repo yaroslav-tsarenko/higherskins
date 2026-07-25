@@ -5,6 +5,7 @@ import { Link } from "@/i18n/routing";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import type { RarityBucket } from "@/lib/skins/queries";
+import { Panel } from "./Section";
 
 // Canonical rarity order + palette (mirrors the CS2 tokens in globals.css).
 const RARITY_META: { match: string; color: string }[] = [
@@ -39,7 +40,8 @@ export function RarityExplorer({ buckets }: { buckets: RarityBucket[] }) {
   const maxCount = Math.max(...sorted.map((b) => b.count), 1);
 
   return (
-    <div className="grid gap-4 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] p-5 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+    <Panel>
+      <div className="grid flex-1 gap-4 lg:grid-cols-[1fr_1.1fr] lg:items-center">
       {/* Tier list */}
       <div className="flex flex-col gap-1.5">
         {sorted.map((b, i) => {
@@ -123,6 +125,7 @@ export function RarityExplorer({ buckets }: { buckets: RarityBucket[] }) {
           </Link>
         </div>
       </motion.div>
-    </div>
+      </div>
+    </Panel>
   );
 }
