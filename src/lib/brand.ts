@@ -31,7 +31,7 @@ export const brand = {
     emailB2B: "info@higherskins.com",
     phone: "+44 7450 581147",
     phoneHref: "tel:+447450581147",
-    contactPage: "/en/contact",
+    contactPage: "/contact",
   },
 
   social: {

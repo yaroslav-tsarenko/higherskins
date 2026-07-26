@@ -23,7 +23,7 @@ export function AdminTopbar() {
         <button className="admin-topbar-icon" title="Notifications" style={{ position: "relative" }}>
           <Bell size={16} />
         </button>
-        <Link href="/en" className="admin-topbar-icon" title="View store">
+        <Link href="/" className="admin-topbar-icon" title="View store">
           <ExternalLink size={15} />
         </Link>
       </div>

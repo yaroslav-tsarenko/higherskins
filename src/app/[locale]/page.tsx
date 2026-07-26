@@ -55,23 +55,15 @@ import {
 
 export const revalidate = 60;
 
-interface HomePageProps {
-  params: Promise<{ locale: string }>;
-}
-
-export async function generateMetadata({ params }: HomePageProps): Promise<Metadata> {
-  const { locale } = await params;
+export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: `${brand.displayName} — ${brand.tagline}`,
+    title: { absolute: `${brand.displayName} — ${brand.tagline}` },
     description: brand.description,
-    alternates: { canonical: `/${locale}` },
-    openGraph: { url: `/${locale}` },
+    alternates: { canonical: "/" },
   };
 }
 
-export default async function HomePage({ params }: HomePageProps) {
-  const { locale } = await params;
-
+export default async function HomePage() {
   const [
     stats,
     pulse,
@@ -215,7 +207,7 @@ export default async function HomePage({ params }: HomePageProps) {
           />
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-6">
             {deals.items.slice(0, 6).map((item) => (
-              <SkinCard key={item.listingId} item={item} locale={locale} />
+              <SkinCard key={item.listingId} item={item} />
             ))}
           </div>
         </Section>
@@ -242,7 +234,7 @@ export default async function HomePage({ params }: HomePageProps) {
             href="/catalog"
             cta="Open catalog"
           />
-          <CategoryShowcase groups={categories} locale={locale} />
+          <CategoryShowcase groups={categories} />
         </Section>
 
         <Section id="rarity">
@@ -283,7 +275,7 @@ export default async function HomePage({ params }: HomePageProps) {
           />
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-6">
             {fresh.items.slice(0, 6).map((item) => (
-              <SkinCard key={item.listingId} item={item} locale={locale} />
+              <SkinCard key={item.listingId} item={item} />
             ))}
           </div>
         </Section>

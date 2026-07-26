@@ -29,7 +29,7 @@ export async function GET() {
       gtin: product.gtin,
       categories: product.categories.map((c) => c.category.name),
       images: product.images.map((img) => img.url),
-      url: `${siteUrl}/en/product/${product.slug}`,
+      url: `${siteUrl}/product/${product.slug}`,
       updatedAt: product.updatedAt,
     }));
 

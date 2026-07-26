@@ -29,7 +29,7 @@ export default async function SkinDetailPage({
   params: Promise<{ locale: string; id: string }>;
   searchParams: Promise<{ listing?: string }>;
 }) {
-  const { locale, id } = await params;
+  const { id } = await params;
   const { listing } = await searchParams;
 
   const skin = await getSkinPageData(id);
@@ -60,7 +60,6 @@ export default async function SkinDetailPage({
       skin={skin}
       history={history}
       markets={markets}
-      locale={locale}
       locked={locked}
       initialListingId={listing}
       purchaseState={purchaseState}

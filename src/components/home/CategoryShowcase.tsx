@@ -10,10 +10,8 @@ import { Panel } from "./Section";
 
 export function CategoryShowcase({
   groups,
-  locale,
 }: {
   groups: Showcase[];
-  locale: string;
 }) {
   const [active, setActive] = useState(0);
   if (!groups.length) return null;
@@ -74,7 +72,7 @@ export function CategoryShowcase({
           className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
         >
           {current.items.map((item) => (
-            <SkinCard key={item.listingId} item={item} locale={locale} />
+            <SkinCard key={item.listingId} item={item} />
           ))}
         </motion.div>
       </AnimatePresence>

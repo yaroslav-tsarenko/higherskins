@@ -17,23 +17,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   });
 
   const staticPages = [
-    { url: `${siteUrl}/en`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 1 },
-    { url: `${siteUrl}/en/catalog`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 0.9 },
-    { url: `${siteUrl}/en/contact`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.5 },
-    { url: `${siteUrl}/en/policies/privacy`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.3 },
-    { url: `${siteUrl}/en/policies/terms`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.3 },
-    { url: `${siteUrl}/en/policies/returns`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.3 },
+    { url: `${siteUrl}/`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 1 },
+    { url: `${siteUrl}/catalog`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 0.9 },
+    { url: `${siteUrl}/contact`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.5 },
+    { url: `${siteUrl}/policies/privacy`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.3 },
+    { url: `${siteUrl}/policies/terms`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.3 },
+    { url: `${siteUrl}/policies/returns`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.3 },
   ];
 
   const productPages = products.map((product) => ({
-    url: `${siteUrl}/en/product/${product.slug}`,
+    url: `${siteUrl}/product/${product.slug}`,
     lastModified: product.updatedAt,
     changeFrequency: "weekly" as const,
     priority: 0.8,
   }));
 
   const categoryPages = categories.map((category) => ({
-    url: `${siteUrl}/en/catalog/${category.slug}`,
+    url: `${siteUrl}/catalog/${category.slug}`,
     lastModified: category.updatedAt,
     changeFrequency: "weekly" as const,
     priority: 0.7,

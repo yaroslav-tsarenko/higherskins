@@ -3,15 +3,7 @@
 import Link from "next/link";
 import { exteriorMeta, type ExteriorCode } from "@/lib/skins/shared";
 import type { CatalogItem } from "@/lib/skins/queries";
-
-export function formatUSD(n: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(n);
-}
+import { useCurrency } from "@/providers/CurrencyProvider";
 
 // Marker position (0–1) of a float within its exterior band, for the mini wear bar.
 function floatMarker(exterior: ExteriorCode, float: number | null): number | null {
@@ -19,10 +11,11 @@ function floatMarker(exterior: ExteriorCode, float: number | null): number | nul
   return Math.max(0, Math.min(1, float));
 }
 
-export function SkinCard({ item, locale = "en" }: { item: CatalogItem; locale?: string }) {
+export function SkinCard({ item }: { item: CatalogItem }) {
+  const { format } = useCurrency();
   const ext = exteriorMeta(item.exterior);
   const marker = floatMarker(item.exterior, item.float);
-  const href = `/${locale}/skin/${item.skinId}?listing=${item.listingId}`;
+  const href = `/skin/${item.skinId}?listing=${item.listingId}`;
 
   return (
     <Link
@@ -124,11 +117,11 @@ export function SkinCard({ item, locale = "en" }: { item: CatalogItem; locale?: 
         <div className="mt-auto flex items-end justify-between gap-2 pt-1">
           <div className="flex flex-col">
             <span className="tnum text-base font-bold text-[color:var(--color-text)]">
-              {formatUSD(item.price)}
+              {format(item.price)}
             </span>
             {item.steamPrice != null && item.discountPct != null && item.discountPct > 0 && (
               <span className="tnum text-[11px] text-[color:var(--color-text-tertiary)] line-through">
-                {formatUSD(item.steamPrice)}
+                {format(item.steamPrice)}
               </span>
             )}
           </div>

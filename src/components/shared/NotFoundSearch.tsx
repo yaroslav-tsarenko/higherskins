@@ -10,8 +10,8 @@ export function NotFoundSearch() {
     e.preventDefault();
     const q = query.trim();
     window.location.href = q
-      ? `/en/search?q=${encodeURIComponent(q)}`
-      : "/en/search";
+      ? `/search?q=${encodeURIComponent(q)}`
+      : "/search";
   };
 
   return (

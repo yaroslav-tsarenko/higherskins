@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from "react";
+import { formatPrice } from "@/lib/utils/format-price";
 
 export type Currency = "USD" | "GBP" | "EUR";
 
@@ -14,6 +15,7 @@ interface CurrencyContextType {
   currency: Currency;
   setCurrency: (currency: Currency) => void;
   convert: (amountInEur: number) => number;
+  format: (amountInEur: number) => string;
   symbol: string;
   rates: Rates;
 }
@@ -25,7 +27,7 @@ const SYMBOLS: Record<Currency, string> = { GBP: "£", USD: "$", EUR: "€" };
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
 export function CurrencyProvider({ children }: { children: ReactNode }) {
-  const [currency, setCurrencyState] = useState<Currency>("GBP");
+  const [currency, setCurrencyState] = useState<Currency>("EUR");
   const [rates, setRates] = useState<Rates>(DEFAULT_RATES);
 
   useEffect(() => {
@@ -53,10 +55,10 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const setCurrency = (c: Currency) => {
+  const setCurrency = useCallback((c: Currency) => {
     setCurrencyState(c);
     localStorage.setItem("currency", c);
-  };
+  }, []);
 
   const convert = useCallback(
     (amountInEur: number) => {
@@ -66,13 +68,17 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     [currency, rates]
   );
 
-  return (
-    <CurrencyContext.Provider
-      value={{ currency, setCurrency, convert, rates, symbol: SYMBOLS[currency] }}
-    >
-      {children}
-    </CurrencyContext.Provider>
+  const format = useCallback(
+    (amountInEur: number) => formatPrice(convert(amountInEur), currency),
+    [convert, currency]
   );
+
+  const value = useMemo<CurrencyContextType>(
+    () => ({ currency, setCurrency, convert, format, rates, symbol: SYMBOLS[currency] }),
+    [currency, setCurrency, convert, format, rates]
+  );
+
+  return <CurrencyContext.Provider value={value}>{children}</CurrencyContext.Provider>;
 }
 
 export function useCurrency() {

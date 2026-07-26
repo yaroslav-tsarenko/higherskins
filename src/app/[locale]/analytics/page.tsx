@@ -43,12 +43,7 @@ function StatCard({ icon: Icon, label, value }: { icon: React.ElementType; label
   );
 }
 
-export default async function AnalyticsPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
+export default async function AnalyticsPage() {
   const [stats, featured, movers] = await Promise.all([
     getMarketStats(),
     getFeaturedSkin(),
@@ -117,7 +112,7 @@ export default async function AnalyticsPage({
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {movers.items.map((item) => (
-            <SkinCard key={item.listingId} item={item} locale={locale} />
+            <SkinCard key={item.listingId} item={item} />
           ))}
         </div>
       </section>

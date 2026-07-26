@@ -5,7 +5,7 @@ import { verifyTokenEdge } from "@/lib/token-edge";
 
 const intlMiddleware = createMiddleware(routing);
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.endsWith("/avontshop.html")) {
@@ -20,7 +20,7 @@ export async function middleware(request: NextRequest) {
 
     if (pathname.startsWith("/admin")) {
       if (!payload) {
-        return NextResponse.redirect(new URL("/en/auth/login", request.url));
+        return NextResponse.redirect(new URL("/auth/login", request.url));
       }
     }
 
@@ -32,6 +32,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|images|fonts|icons|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|manifest.webmanifest|opengraph-image|twitter-image|icon|apple-icon|images|fonts|icons|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

@@ -50,11 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
-    // Preserve the shopper's locale on the sign-in redirect so Latvian users
-    // stay on the LV site instead of getting bounced to /en/.
-    const locale = window.location.pathname.split("/")[1] || "en";
-    const supported = ["en", "lv"].includes(locale) ? locale : "en";
-    window.location.href = `/${supported}/auth/login`;
+    window.location.href = "/auth/login";
   };
 
   return (

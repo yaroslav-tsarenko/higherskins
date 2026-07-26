@@ -7,16 +7,15 @@ export const runtime = "nodejs";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const locale = url.searchParams.get("locale") || "en";
-  const next = url.searchParams.get("next") || `/${locale}/account`;
+  const next = url.searchParams.get("next") || "/account";
   const isLink = url.searchParams.get("link") === "1";
   const base = getBaseUrl();
-  const dest = next.startsWith("/") ? `${base}${next}` : `${base}/${locale}/account`;
+  const dest = next.startsWith("/") ? `${base}${next}` : `${base}/account`;
 
   try {
     const steamId64 = await verifySteamCallback(url.searchParams);
     if (!steamId64) {
-      return NextResponse.redirect(`${base}/${locale}/auth?error=steam`);
+      return NextResponse.redirect(`${base}/auth?error=steam`);
     }
 
     const profile = await fetchSteamProfile(steamId64);
@@ -36,7 +35,7 @@ export async function GET(req: Request) {
     if (isLink) {
       const current = await getSessionUser();
       if (!current) {
-        return NextResponse.redirect(`${base}/${locale}/auth?error=steam`);
+        return NextResponse.redirect(`${base}/auth?error=steam`);
       }
       if (existing && existing.userId !== current.id) {
         // This SteamID already belongs to another account.
@@ -86,6 +85,6 @@ export async function GET(req: Request) {
     await setSessionCookie(userId);
     return NextResponse.redirect(dest);
   } catch {
-    return NextResponse.redirect(`${base}/${locale}/auth?error=steam`);
+    return NextResponse.redirect(`${base}/auth?error=steam`);
   }
 }

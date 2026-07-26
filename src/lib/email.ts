@@ -90,9 +90,9 @@ function emailWrapper(content: string, options: { preheader?: string } = {}): st
       <p style="margin:0 0 4px;">&copy; ${new Date().getFullYear()} Higherskins. All rights reserved.</p>
       <p style="margin:0;">RYE FLOUR COOKIES LTD &middot; Bridgend, Mid Glamorgan, Academy House, 11 Dunraven Place &middot; Reg. 16020956 &middot; <a href="${getSiteUrl()}" style="color:${BRAND_COLOR};text-decoration:none;">higherskins.com</a></p>
       <p style="margin:8px 0 0;">
-        <a href="${getSiteUrl()}/en/policies/privacy" style="color:#999;text-decoration:underline;margin:0 6px;">Privacy</a>
-        <a href="${getSiteUrl()}/en/policies/terms" style="color:#999;text-decoration:underline;margin:0 6px;">Terms</a>
-        <a href="${getSiteUrl()}/en/contact" style="color:#999;text-decoration:underline;margin:0 6px;">Contact</a>
+        <a href="${getSiteUrl()}/policies/privacy" style="color:#999;text-decoration:underline;margin:0 6px;">Privacy</a>
+        <a href="${getSiteUrl()}/policies/terms" style="color:#999;text-decoration:underline;margin:0 6px;">Terms</a>
+        <a href="${getSiteUrl()}/contact" style="color:#999;text-decoration:underline;margin:0 6px;">Contact</a>
       </p>
     </div>
   </div>
@@ -144,7 +144,7 @@ export async function sendWelcomeEmail(email: string, name?: string | null): Pro
           <li>Track every purchase under My Trades</li>
         </ul>
       </div>
-      ${button(`${siteUrl}/en/catalog`, "Browse the Market")}
+      ${button(`${siteUrl}/catalog`, "Browse the Market")}
       <p style="color:#999;font-size:13px;margin:24px 0 0;text-align:center;">
         Buyer protection on every trade
       </p>
@@ -330,7 +330,7 @@ export async function sendOrderConfirmationEmail(data: OrderEmailData): Promise<
       ${itemsTable(data.items)}
       ${totalsBlock(data)}
 
-      ${button(`${siteUrl}/en/account/orders/${data.orderId}`, "View Your Order")}
+      ${button(`${siteUrl}/account/orders/${data.orderId}`, "View Your Order")}
 
       <p style="color:#999;font-size:13px;margin:24px 0 0;text-align:center;">
         You&rsquo;ll receive a shipping confirmation when your order is on its way.
@@ -452,7 +452,7 @@ export async function sendOrderShippedEmail(data: OrderEmailData): Promise<boole
         We&rsquo;ll send another email when your order is delivered.
       </p>
 
-      ${button(`${siteUrl}/en/account/orders/${data.orderId}`, "Track Your Order")}
+      ${button(`${siteUrl}/account/orders/${data.orderId}`, "Track Your Order")}
     `,
       { preheader: `Order #${id} shipped${tracking ? ` — ${tracking}` : ""}` },
     ),
@@ -476,7 +476,7 @@ export async function sendOrderStatusEmail(
       iconColor: "#2E7D32",
       message: "Your order has been delivered. We hope you love it! If anything's wrong, just reply to this email.",
       cta: "Leave a review",
-      ctaHref: `${siteUrl}/en/account/orders/${data.orderId}`,
+      ctaHref: `${siteUrl}/account/orders/${data.orderId}`,
     },
     CANCELLED: {
       subject: `Order #${id} cancelled`,
@@ -486,7 +486,7 @@ export async function sendOrderStatusEmail(
       iconColor: "#C62828",
       message: "This order has been cancelled. If you were charged, a refund will be processed back to your original payment method within 5–10 business days.",
       cta: "Continue shopping",
-      ctaHref: `${siteUrl}/en/catalog`,
+      ctaHref: `${siteUrl}/catalog`,
     },
     REFUNDED: {
       subject: `Order #${id} refunded`,
@@ -496,7 +496,7 @@ export async function sendOrderStatusEmail(
       iconColor: "#1565C0",
       message: `Your refund of <strong>${formatEur(toNum(data.total))}</strong> has been issued to your original payment method. It may take 5–10 business days to appear on your statement.`,
       cta: "View order",
-      ctaHref: `${siteUrl}/en/account/orders/${data.orderId}`,
+      ctaHref: `${siteUrl}/account/orders/${data.orderId}`,
     },
   } as const;
 
@@ -615,7 +615,7 @@ export async function sendContactAutoReplyEmail(submission: ContactSubmission): 
         <p style="margin:0;font-size:14px;color:${MUTED_COLOR};line-height:1.6;white-space:pre-wrap;">${escape(submission.message)}</p>
       </div>
       <p style="color:#999;font-size:13px;margin:16px 0 0;">
-        In the meantime, you can check our <a href="${getSiteUrl()}/en/faq" style="color:${BRAND_COLOR};">FAQ</a> or browse our <a href="${getSiteUrl()}/en/catalog" style="color:${BRAND_COLOR};">catalog</a>.
+        In the meantime, you can check our <a href="${getSiteUrl()}/faq" style="color:${BRAND_COLOR};">FAQ</a> or browse our <a href="${getSiteUrl()}/catalog" style="color:${BRAND_COLOR};">catalog</a>.
       </p>
     `,
       { preheader: "Thanks for your message — we'll reply within 24 hours." },

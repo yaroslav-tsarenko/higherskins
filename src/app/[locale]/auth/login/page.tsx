@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/Button";
 import { Mail, Lock, Eye, EyeOff, ShoppingBag } from "lucide-react";
@@ -10,7 +10,6 @@ import { motion } from "framer-motion";
 
 export default function LoginPage() {
   const t = useTranslations("auth");
-  const locale = useLocale();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,7 +30,7 @@ export default function LoginPage() {
       if (data.user?.role === "ADMIN" || data.user?.role === "SUPER_ADMIN") {
         window.location.href = "/admin";
       } else {
-        window.location.href = `/${locale}/account`;
+        window.location.href = "/account";
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Login failed");

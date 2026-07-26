@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_BASE_URL ||
       request.headers.get("origin") ||
       "https://higherskins.com";
-    const resetUrl = `${baseUrl.replace(/\/+$/, "")}/en/auth/reset-password?token=${token}`;
+    const resetUrl = `${baseUrl.replace(/\/+$/, "")}/auth/reset-password?token=${token}`;
 
     scheduleEmail("password reset", () => sendPasswordResetEmail(email, resetUrl, user.name));
 

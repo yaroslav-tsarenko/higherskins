@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,7 +25,6 @@ interface MeSteam {
 export default function ProfilePage() {
   const t = useTranslations("account");
   const common = useTranslations("common");
-  const locale = useLocale();
   const { user, refresh } = useAuth();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
@@ -77,7 +76,7 @@ export default function ProfilePage() {
   };
 
   const steamLinkHref =
-    `/api/auth/steam?locale=${locale}&link=1&next=${encodeURIComponent(`/${locale}/account/profile`)}`;
+    `/api/auth/steam?link=1&next=${encodeURIComponent("/account/profile")}`;
 
   return (
     <div className="max-w-lg">

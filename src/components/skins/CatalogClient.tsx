@@ -34,7 +34,7 @@ function useDebounced<T>(value: T, delay = 350): T {
   return v;
 }
 
-export function CatalogClient({ facets, locale }: { facets: Facets; locale: string }) {
+export function CatalogClient({ facets }: { facets: Facets }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -360,7 +360,7 @@ export function CatalogClient({ facets, locale }: { facets: Facets; locale: stri
         {/* grid */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {items.map((it) => (
-            <SkinCard key={it.listingId} item={it} locale={locale} />
+            <SkinCard key={it.listingId} item={it} />
           ))}
           {loading && items.length === 0 &&
             Array.from({ length: 12 }).map((_, i) => <SkinCardSkeleton key={i} />)}

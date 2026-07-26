@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AlertCircle, Check, ExternalLink, Loader2, Lock, X } from "lucide-react";
-import { formatUSD } from "./SkinCard";
+import { useCurrency } from "@/providers/CurrencyProvider";
 
 export type PurchaseState = "anon" | "no-steam" | "no-trade-url" | "ready";
 
@@ -17,7 +17,6 @@ export function TradeSetupModal({
   open,
   onClose,
   initialState,
-  locale,
   skinName,
   price,
   priceValue,
@@ -27,13 +26,13 @@ export function TradeSetupModal({
   open: boolean;
   onClose: () => void;
   initialState: PurchaseState;
-  locale: string;
   skinName: string;
   price: string;
   priceValue: number;
   listingId: string;
   next: string;
 }) {
+  const { format } = useCurrency();
   const [state, setState] = useState<PurchaseState>(initialState);
   const [tradeUrl, setTradeUrl] = useState("");
   const [saving, setSaving] = useState(false);
@@ -45,11 +44,11 @@ export function TradeSetupModal({
 
   if (!open) return null;
 
-  const steamHref = `/api/auth/steam?locale=${locale}&next=${encodeURIComponent(next)}`;
+  const steamHref = `/api/auth/steam?next=${encodeURIComponent(next)}`;
   // Signed-in email-only buyer: attach Steam to the SAME account instead of
   // spinning up a duplicate Steam-only user.
   const steamLinkHref = `${steamHref}&link=1`;
-  const authHref = `/${locale}/auth?next=${encodeURIComponent(next)}`;
+  const authHref = `/auth?next=${encodeURIComponent(next)}`;
 
   // Buyer-facing fee breakdown. Mirrors computeFees() on the server; the
   // authoritative total comes back from the purchase response.
@@ -236,7 +235,7 @@ export function TradeSetupModal({
                   Steam. Accept the offer to receive it — track progress in My Trades.
                 </p>
                 <Link
-                  href={`/${locale}/account/trades`}
+                  href="/account/trades"
                   className="mt-5 flex w-full items-center justify-center rounded-xl bg-[color:var(--color-primary)] px-5 py-3 text-sm font-bold text-white"
                 >
                   View my trades
@@ -254,7 +253,7 @@ export function TradeSetupModal({
                   </div>
                   <div className="flex items-center justify-between py-0.5 text-sm">
                     <span className="text-[color:var(--color-text-secondary)]">Item price</span>
-                    <span className="tnum text-[color:var(--color-text)]">{formatUSD(fees.itemPrice)}</span>
+                    <span className="tnum text-[color:var(--color-text)]">{format(fees.itemPrice)}</span>
                   </div>
                   <div className="flex items-center justify-between py-0.5 text-sm">
                     <span className="text-[color:var(--color-text-secondary)]">Buyer protection</span>
@@ -262,7 +261,7 @@ export function TradeSetupModal({
                   </div>
                   <div className="mt-2 flex items-center justify-between border-t border-[color:var(--color-border)] pt-2 text-sm">
                     <span className="font-semibold text-[color:var(--color-text)]">Total</span>
-                    <span className="tnum font-bold text-[color:var(--color-text)]">{formatUSD(fees.total)}</span>
+                    <span className="tnum font-bold text-[color:var(--color-text)]">{format(fees.total)}</span>
                   </div>
                 </div>
 

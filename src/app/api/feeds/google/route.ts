@@ -20,7 +20,7 @@ export async function GET() {
       <g:id>${escapeXml(product.id)}</g:id>
       <title>${escapeXml(product.name)}</title>
       <description>${escapeXml(product.description || product.name)}</description>
-      <link>${siteUrl}/en/product/${escapeXml(product.slug)}</link>
+      <link>${siteUrl}/product/${escapeXml(product.slug)}</link>
       <g:image_link>${escapeXml(imageUrl)}</g:image_link>
       <g:price>${price}</g:price>
       ${product.comparePrice ? `<g:sale_price>${Number(product.price).toFixed(2)} EUR</g:sale_price>` : ""}

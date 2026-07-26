@@ -17,20 +17,17 @@ const PERKS = [
 ];
 
 export default async function AuthPage({
-  params,
   searchParams,
 }: {
-  params: Promise<{ locale: string }>;
   searchParams: Promise<{ next?: string; error?: string }>;
 }) {
-  const { locale } = await params;
   const { next, error } = await searchParams;
 
   const user = await getSessionUser();
-  if (user) redirect(next && next.startsWith("/") ? next : `/${locale}/account`);
+  if (user) redirect(next && next.startsWith("/") ? next : "/account");
 
   const nextParam = next ? `?next=${encodeURIComponent(next)}` : "";
-  const steamHref = `/api/auth/steam?locale=${locale}${next ? `&next=${encodeURIComponent(next)}` : ""}`;
+  const steamHref = `/api/auth/steam${next ? `?next=${encodeURIComponent(next)}` : ""}`;
 
   return (
     <div className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col items-center justify-center px-4 py-12">
@@ -53,7 +50,7 @@ export default async function AuthPage({
 
         <div className="flex flex-col gap-3">
           <Link
-            href={`/${locale}/auth/login${nextParam}`}
+            href={`/auth/login${nextParam}`}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-[color:var(--color-primary)] px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-glow-violet)] transition hover:brightness-110"
           >
             <Mail className="h-4 w-4" />
@@ -71,7 +68,7 @@ export default async function AuthPage({
         <p className="mt-4 text-center text-sm text-[color:var(--color-text-secondary)]">
           New here?{" "}
           <Link
-            href={`/${locale}/auth/register${nextParam}`}
+            href={`/auth/register${nextParam}`}
             className="inline-flex items-center gap-1 font-semibold text-[color:var(--color-accent)] hover:opacity-80"
           >
             Create an account <ArrowRight className="h-3.5 w-3.5" />
@@ -91,7 +88,7 @@ export default async function AuthPage({
 
         <p className="mt-6 text-center text-xs text-[color:var(--color-text-tertiary)]">
           We never see your Steam password. Auth is handled by Steam OpenID.{" "}
-          <Link href={`/${locale}/policies/privacy`} className="underline hover:text-[color:var(--color-text)]">
+          <Link href="/policies/privacy" className="underline hover:text-[color:var(--color-text)]">
             Privacy
           </Link>
         </p>

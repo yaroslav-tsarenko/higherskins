@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import NextLink from "next/link";
 import Image from "next/image";
-import { useLocale } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/routing";
 import {
   Search,
@@ -32,7 +31,6 @@ import { useCurrency } from "@/providers/CurrencyProvider";
 import { AnimatePresence, motion } from "framer-motion";
 import { HigherskinsLogo } from "../HigherskinsLogo";
 import { CurrencySwitcher } from "./CurrencySwitcher";
-import { LanguageSwitcher } from "./LanguageSwitcher";
 
 interface SkinSuggestion {
   id: string;
@@ -79,7 +77,6 @@ function useDismiss(onClose: () => void) {
 }
 
 export function Header() {
-  const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const { user, role, signOut } = useAuth();
@@ -365,11 +362,9 @@ export function Header() {
 
           {/* Right cluster */}
           <div className="ml-auto flex items-center gap-2 lg:ml-0">
-            {/* Currency / language */}
+            {/* Currency */}
             <div className="hidden items-center gap-1 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] px-1.5 py-1 md:flex">
               <CurrencySwitcher />
-              <span className="h-4 w-px bg-[color:var(--color-border)]" />
-              <LanguageSwitcher />
             </div>
 
             {/* Wallet balance placeholder */}
@@ -627,8 +622,6 @@ export function Header() {
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-1 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] px-1.5 py-1">
                     <CurrencySwitcher />
-                    <span className="h-4 w-px bg-[color:var(--color-border)]" />
-                    <LanguageSwitcher />
                   </div>
                 </div>
                 {user ? (
