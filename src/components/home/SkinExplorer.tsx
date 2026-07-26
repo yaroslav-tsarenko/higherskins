@@ -6,13 +6,10 @@ import { Link } from "@/i18n/routing";
 import { ArrowRight, Filter, RotateCcw, SlidersHorizontal } from "lucide-react";
 import { EXTERIORS, RARITY_TIERS, type ExteriorCode } from "@/lib/skins/shared";
 import type { CatalogItem } from "@/lib/skins/queries";
+import { useCurrency } from "@/providers/CurrencyProvider";
 import { Panel } from "./Section";
 
 const PRICE_STEPS = [10, 50, 150, 500, 2000, Infinity];
-
-function priceLabel(v: number): string {
-  return v === Infinity ? "Any" : `$${v}`;
-}
 
 function Chip({
   active,
@@ -55,6 +52,9 @@ function toggle<T>(list: T[], value: T): T[] {
 }
 
 export function SkinExplorer({ pool }: { pool: CatalogItem[] }) {
+  const { format, convert, symbol } = useCurrency();
+  const priceLabel = (v: number) =>
+    v === Infinity ? "Any" : `${symbol}${Math.round(convert(v)).toLocaleString("en-US")}`;
   const [categories, setCategories] = useState<string[]>([]);
   const [rarities, setRarities] = useState<string[]>([]);
   const [exteriors, setExteriors] = useState<ExteriorCode[]>([]);
@@ -282,7 +282,7 @@ export function SkinExplorer({ pool }: { pool: CatalogItem[] }) {
                         </span>
                         <span className="mt-auto flex items-center justify-between gap-2">
                           <span className="spec-value text-[13.5px] font-bold text-[color:var(--color-accent)]">
-                            ${item.price.toFixed(2)}
+                            {format(item.price)}
                           </span>
                           {item.float != null && (
                             <span className="font-mono text-[9.5px] tabular-nums text-[color:var(--color-text-tertiary)]">

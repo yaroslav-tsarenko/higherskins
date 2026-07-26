@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Link } from "@/i18n/routing";
 import { ArrowRight, Shuffle, X } from "lucide-react";
 import type { CatalogItem, LoadoutSlotPool } from "@/lib/skins/queries";
+import { useCurrency } from "@/providers/CurrencyProvider";
 import { Panel } from "./Section";
 
 type Selection = Record<string, CatalogItem | undefined>;
@@ -23,6 +24,7 @@ function SlotCard({
   item: CatalogItem | undefined;
   onClear: () => void;
 }) {
+  const { format } = useCurrency();
   return (
     <div
       className="relative flex flex-col overflow-hidden rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg)]"
@@ -64,7 +66,7 @@ function SlotCard({
           {item ? item.name.split(" | ").slice(1).join(" | ") || item.name : "—"}
         </span>
         <span className="spec-value text-[12.5px] font-bold text-[color:var(--color-accent)]">
-          {item ? `$${item.price.toFixed(2)}` : "$0.00"}
+          {format(item ? item.price : 0)}
         </span>
       </div>
     </div>
@@ -75,6 +77,8 @@ export function LoadoutBuilder({ pools }: { pools: LoadoutSlotPool[] }) {
   const [side, setSide] = useState<(typeof SIDES)[number]["key"]>("ct");
   const [selection, setSelection] = useState<Selection>({});
   const [activeSlot, setActiveSlot] = useState(pools[0]?.slot ?? "knife");
+
+  const { format } = useCurrency();
 
   if (!pools.length) return null;
 
@@ -153,7 +157,7 @@ export function LoadoutBuilder({ pools }: { pools: LoadoutSlotPool[] }) {
               <button
                 key={item.listingId}
                 onClick={() => setSelection((s) => ({ ...s, [activeSlot]: item }))}
-                title={`${item.name} — $${item.price.toFixed(2)}`}
+                title={`${item.name} — ${format(item.price)}`}
                 className={`relative flex h-16 w-20 shrink-0 items-center justify-center rounded-lg border bg-[color:var(--color-bg)] transition-colors ${
                   picked
                     ? "border-[color:var(--color-primary)]"
@@ -187,7 +191,7 @@ export function LoadoutBuilder({ pools }: { pools: LoadoutSlotPool[] }) {
             transition={{ duration: 0.18 }}
             className="font-display text-2xl font-extrabold tabular-nums text-[color:var(--color-text)]"
           >
-            ${total.toFixed(2)}
+            {format(total)}
           </motion.div>
         </div>
         <Link

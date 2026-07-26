@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Link } from "@/i18n/routing";
 import { Award, Crown, Percent, Sparkle, Swords } from "lucide-react";
 import type { Highlight } from "@/lib/skins/queries";
+import { useCurrency } from "@/providers/CurrencyProvider";
 import { Panel, PanelGrid } from "./Section";
 
 const ICONS: Record<string, React.ElementType> = {
@@ -14,6 +15,7 @@ const ICONS: Record<string, React.ElementType> = {
 };
 
 export function DailyHighlights({ highlights }: { highlights: Highlight[] }) {
+  const { format } = useCurrency();
   if (!highlights.length) return null;
 
   return (
@@ -56,7 +58,7 @@ export function DailyHighlights({ highlights }: { highlights: Highlight[] }) {
                     {h.note}
                   </span>
                   <span className="mt-auto pt-3 spec-value text-[15px] font-extrabold text-[color:var(--color-accent)]">
-                    ${h.item.price.toFixed(2)}
+                    {format(h.item.price)}
                   </span>
                 </span>
               </Link>

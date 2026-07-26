@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Link } from "@/i18n/routing";
 import { ArrowRight, Wallet } from "lucide-react";
 import type { CatalogItem } from "@/lib/skins/queries";
+import { useCurrency } from "@/providers/CurrencyProvider";
 import { Panel } from "./Section";
 
 const MIN = 1;
@@ -23,12 +24,15 @@ function toSlider(budget: number): number {
 const PRESETS = [10, 50, 250, 1000];
 
 export function BudgetFinder({ pool }: { pool: CatalogItem[] }) {
+  const { format, convert, symbol } = useCurrency();
   const [budget, setBudget] = useState(100);
 
   const { affordable, picks } = useMemo(() => {
     const affordable = pool.filter((i) => i.price <= budget);
     return { affordable, picks: affordable.slice(0, 4) };
   }, [pool, budget]);
+
+  const budgetLabel = (v: number) => `${symbol}${Math.round(convert(v)).toLocaleString("en-US")}`;
 
   if (!pool.length) return null;
 
@@ -50,7 +54,7 @@ export function BudgetFinder({ pool }: { pool: CatalogItem[] }) {
           </div>
           <h3 className="mt-1 font-display text-xl font-extrabold tracking-tight text-[color:var(--color-text)]">
             What can I get for{" "}
-            <span className="spec-value text-[color:var(--color-primary)]">${budget}</span>?
+            <span className="spec-value text-[color:var(--color-primary)]">{budgetLabel(budget)}</span>?
           </h3>
 
           <label className="mt-4 block">
@@ -66,8 +70,8 @@ export function BudgetFinder({ pool }: { pool: CatalogItem[] }) {
             />
           </label>
           <div className="mt-1 flex justify-between font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--color-text-tertiary)]">
-            <span>${MIN}</span>
-            <span>${MAX.toLocaleString("en-US")}+</span>
+            <span>{budgetLabel(MIN)}</span>
+            <span>{budgetLabel(MAX)}+</span>
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
@@ -81,7 +85,7 @@ export function BudgetFinder({ pool }: { pool: CatalogItem[] }) {
                     : "border-[color:var(--color-border)] text-[color:var(--color-text-secondary)] hover:border-[color:var(--color-line-strong)]"
                 }`}
               >
-                ${p}
+                {budgetLabel(p)}
               </button>
             ))}
           </div>
@@ -119,7 +123,7 @@ export function BudgetFinder({ pool }: { pool: CatalogItem[] }) {
                     {item.name}
                   </span>
                   <span className="mt-auto spec-value text-[13.5px] font-bold text-[color:var(--color-accent)]">
-                    ${item.price.toFixed(2)}
+                    {format(item.price)}
                   </span>
                 </span>
               </Link>
@@ -143,7 +147,7 @@ export function BudgetFinder({ pool }: { pool: CatalogItem[] }) {
             href={`/catalog?priceMax=${budget}&sort=discount`}
             className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--color-primary)] px-4 py-2.5 text-[13px] font-bold text-[color:var(--color-primary-fg)] transition-colors hover:bg-[color:var(--color-primary-hover)]"
           >
-            Shop under ${budget} <ArrowRight size={14} />
+            Shop under {budgetLabel(budget)} <ArrowRight size={14} />
           </Link>
         </div>
       </div>

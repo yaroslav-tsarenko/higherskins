@@ -6,6 +6,7 @@ import { Link } from "@/i18n/routing";
 import { Radio, ShoppingBag, PlusCircle, TrendingDown } from "lucide-react";
 import { exteriorMeta } from "@/lib/skins/shared";
 import type { ActivityEvent, ActivityKind } from "@/lib/skins/queries";
+import { useCurrency } from "@/providers/CurrencyProvider";
 import { Panel } from "./Section";
 
 const KIND_META: Record<ActivityKind, { label: string; icon: React.ElementType; color: string }> = {
@@ -24,6 +25,7 @@ function relativeTime(iso: string, now: number | null): string {
 }
 
 function ActivityRow({ event, now }: { event: ActivityEvent; now: number | null }) {
+  const { format } = useCurrency();
   const meta = KIND_META[event.kind];
   const Icon = meta.icon;
   const ext = exteriorMeta(event.exterior);
@@ -71,7 +73,7 @@ function ActivityRow({ event, now }: { event: ActivityEvent; now: number | null 
 
       <span className="shrink-0 text-right">
         <span className="block spec-value text-[13.5px] font-bold text-[color:var(--color-text)]">
-          ${event.price.toFixed(2)}
+          {format(event.price)}
         </span>
         <span className="block font-mono text-[10px] tabular-nums text-[color:var(--color-text-tertiary)]">
           {relativeTime(event.at, now)}

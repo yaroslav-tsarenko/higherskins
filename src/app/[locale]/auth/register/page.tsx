@@ -65,6 +65,8 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [agreedToPolicy, setAgreedToPolicy] = useState(false);
+  const [policyError, setPolicyError] = useState(false);
 
   const strength = getPasswordStrength(form.password);
 
@@ -113,6 +115,10 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateStep(3)) return;
+    if (!agreedToPolicy) {
+      setPolicyError(true);
+      return;
+    }
 
     setLoading(true);
     try {
@@ -500,11 +506,31 @@ export default function RegisterPage() {
                   {renderError("confirmPassword")}
                 </div>
 
-                <p className="text-[13px] leading-relaxed text-[color:var(--color-text-tertiary)]">
-                  By creating an account, you agree to our{" "}
-                  <Link href="/policies/terms" className="text-[color:var(--color-accent)] hover:underline">Terms of Service</Link> and{" "}
-                  <Link href="/policies/privacy" className="text-[color:var(--color-accent)] hover:underline">Privacy Policy</Link>.
-                </p>
+                <div className="flex flex-col gap-1.5">
+                  <label className="flex cursor-pointer items-start gap-2.5 text-[13px] leading-relaxed text-[color:var(--color-text-secondary)]">
+                    <input
+                      type="checkbox"
+                      checked={agreedToPolicy}
+                      onChange={(e) => {
+                        setAgreedToPolicy(e.target.checked);
+                        if (e.target.checked) setPolicyError(false);
+                      }}
+                      className={`mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-[color:var(--color-line)] accent-[color:var(--color-primary)] ${
+                        policyError ? "outline outline-1 outline-[color:var(--color-danger)]" : ""
+                      }`}
+                    />
+                    <span>
+                      I agree to the{" "}
+                      <Link href="/policies/terms" className="text-[color:var(--color-accent)] hover:underline">Terms of Service</Link> and{" "}
+                      <Link href="/policies/privacy" className="text-[color:var(--color-accent)] hover:underline">Privacy Policy</Link>.
+                    </span>
+                  </label>
+                  {policyError && (
+                    <span className="text-xs text-[color:var(--color-danger)]">
+                      You must accept the Privacy Policy to continue
+                    </span>
+                  )}
+                </div>
 
                 <div className="mt-1 flex gap-3">
                   <Button type="button" variant="bordered" onPress={goBack} startContent={<ChevronLeft size={16} />}>

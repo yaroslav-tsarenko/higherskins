@@ -6,6 +6,7 @@ import { Link } from "@/i18n/routing";
 import { ArrowLeftRight, ArrowRight } from "lucide-react";
 import { EXTERIORS, RARITY_TIERS, exteriorMeta } from "@/lib/skins/shared";
 import type { CatalogItem } from "@/lib/skins/queries";
+import { useCurrency } from "@/providers/CurrencyProvider";
 import { Panel } from "./Section";
 
 // Metrics are derived from listing data only — no invented popularity scores.
@@ -29,6 +30,7 @@ function ComparePicker({
   value: CatalogItem;
   onChange: (item: CatalogItem) => void;
 }) {
+  const { format } = useCurrency();
   return (
     <label className="block">
       <span className="mb-1.5 block font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--color-text-tertiary)]">
@@ -44,7 +46,7 @@ function ComparePicker({
       >
         {pool.map((i) => (
           <option key={i.listingId} value={i.listingId}>
-            {i.name} — ${i.price.toFixed(2)}
+            {i.name} — {format(i.price)}
           </option>
         ))}
       </select>
@@ -116,6 +118,7 @@ function StatRow({
 }
 
 export function SkinCompare({ pool }: { pool: CatalogItem[] }) {
+  const { format } = useCurrency();
   const options = useMemo(() => pool.slice(0, 60), [pool]);
   const [left, setLeft] = useState(options[0]);
   const [right, setRight] = useState(options[Math.min(1, options.length - 1)]);
@@ -155,8 +158,8 @@ export function SkinCompare({ pool }: { pool: CatalogItem[] }) {
       <div className="mt-4">
         <StatRow
           label="Price"
-          left={`$${left.price.toFixed(2)}`}
-          right={`$${right.price.toFixed(2)}`}
+          left={format(left.price)}
+          right={format(right.price)}
           leftBetter={left.price < right.price}
           rightBetter={right.price < left.price}
         />
@@ -203,7 +206,7 @@ export function SkinCompare({ pool }: { pool: CatalogItem[] }) {
           ) : (
             <>
               <span className="spec-value font-bold text-[color:var(--color-text)]">
-                ${Math.abs(priceDiff).toFixed(2)}
+                {format(Math.abs(priceDiff))}
               </span>{" "}
               cheaper on the {priceDiff > 0 ? "right" : "left"}.
             </>

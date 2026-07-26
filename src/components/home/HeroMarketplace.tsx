@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { CountUp } from "./CountUp";
 import type { CatalogItem, MarketStats } from "@/lib/skins/queries";
+import { useCurrency } from "@/providers/CurrencyProvider";
 
 interface HeroProps {
   stats: MarketStats;
@@ -42,6 +43,7 @@ function FloatingCard({
   item: CatalogItem;
   slot: (typeof FLOAT_SLOTS)[number];
 }) {
+  const { convert, symbol } = useCurrency();
   return (
     <motion.div
       initial={{ opacity: 0, y: 24, scale: 0.94 }}
@@ -83,7 +85,8 @@ function FloatingCard({
           {item.weapon}
         </span>
         <span className="spec-value shrink-0 text-[12px] font-bold text-[color:var(--color-accent)]">
-          ${item.price.toFixed(0)}
+          {symbol}
+          {convert(item.price).toFixed(0)}
         </span>
       </span>
     </motion.div>
@@ -91,9 +94,10 @@ function FloatingCard({
 }
 
 export function HeroMarketplace({ stats, listedToday, floaters }: HeroProps) {
+  const { convert, symbol } = useCurrency();
   const values: Record<(typeof STAT_ITEMS)[number]["key"], number> = {
     listings: stats.totalListings,
-    value: Math.round(stats.marketValue),
+    value: Math.round(convert(stats.marketValue)),
     discount: stats.avgDiscountPct,
     today: listedToday,
   };
@@ -167,7 +171,7 @@ export function HeroMarketplace({ stats, listedToday, floaters }: HeroProps) {
                 <CountUp
                   value={values[s.key]}
                   decimals={s.decimals}
-                  prefix={s.prefix}
+                  prefix={s.key === "value" ? symbol : s.prefix}
                   suffix={s.suffix}
                   className="block font-display text-xl font-extrabold tabular-nums leading-none text-[color:var(--color-text)]"
                 />

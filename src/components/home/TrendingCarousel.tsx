@@ -6,9 +6,11 @@ import { Link } from "@/i18n/routing";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { exteriorMeta } from "@/lib/skins/shared";
 import type { CatalogItem, TrendingSet } from "@/lib/skins/queries";
+import { useCurrency } from "@/providers/CurrencyProvider";
 import { Panel } from "./Section";
 
 function TrendCard({ item }: { item: CatalogItem }) {
+  const { format } = useCurrency();
   const ext = exteriorMeta(item.exterior);
   const down = (item.discountPct ?? 0) > 0;
 
@@ -62,11 +64,11 @@ function TrendCard({ item }: { item: CatalogItem }) {
         </span>
         <span className="mt-auto flex items-end justify-between gap-2 pt-1">
           <span className="spec-value text-[15px] font-bold text-[color:var(--color-text)]">
-            ${item.price.toFixed(2)}
+            {format(item.price)}
           </span>
           {item.steamPrice != null && down && (
             <span className="spec-value text-[11px] text-[color:var(--color-text-tertiary)] line-through">
-              ${item.steamPrice.toFixed(2)}
+              {format(item.steamPrice)}
             </span>
           )}
         </span>

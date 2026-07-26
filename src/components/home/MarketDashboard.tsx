@@ -5,6 +5,7 @@ import { Activity, Boxes, Crosshair, DollarSign, TrendingUp, TrendingDown } from
 import { CountUp } from "./CountUp";
 import { Panel } from "./Section";
 import type { MarketPulse } from "@/lib/skins/queries";
+import { useCurrency } from "@/providers/CurrencyProvider";
 
 function TrendBars({ series, color }: { series: number[]; color: string }) {
   const max = Math.max(...series, 1);
@@ -68,6 +69,7 @@ function MetricPanel({
 }
 
 export function MarketDashboard({ pulse }: { pulse: MarketPulse }) {
+  const { convert, symbol } = useCurrency();
   const supply = pulse.supplyTrend.map((d) => d.count);
   const hasSales = pulse.soldCount > 0;
 
@@ -90,7 +92,7 @@ export function MarketDashboard({ pulse }: { pulse: MarketPulse }) {
           </p>
         }
       >
-        <CountUp value={pulse.avgPrice} decimals={2} prefix="$" />
+        <CountUp value={convert(pulse.avgPrice)} decimals={2} prefix={symbol} />
       </MetricPanel>
 
       <MetricPanel
@@ -126,7 +128,7 @@ export function MarketDashboard({ pulse }: { pulse: MarketPulse }) {
           </p>
         }
       >
-        <CountUp value={pulse.soldVolume} decimals={2} prefix="$" />
+        <CountUp value={convert(pulse.soldVolume)} decimals={2} prefix={symbol} />
       </MetricPanel>
     </div>
   );

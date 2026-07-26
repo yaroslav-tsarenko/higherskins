@@ -3,12 +3,14 @@
 import { Link } from "@/i18n/routing";
 import { TrendingDown } from "lucide-react";
 import type { TickerListing } from "@/lib/skins/queries";
+import { useCurrency } from "@/providers/CurrencyProvider";
 import { Panel } from "./Section";
 
 // Continuously scrolling strip of the newest listings. The list is rendered
 // twice so the -50% marquee loop is seamless; the animation is paused on hover
 // and frozen entirely under prefers-reduced-motion (global rule).
 export function MarketTicker({ items }: { items: TickerListing[] }) {
+  const { format } = useCurrency();
   if (!items.length) return null;
   const loop = [...items, ...items];
 
@@ -47,7 +49,7 @@ export function MarketTicker({ items }: { items: TickerListing[] }) {
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="spec-value text-[13px] font-bold text-[color:var(--color-accent)]">
-                  ${item.price.toFixed(2)}
+                  {format(item.price)}
                 </span>
                 {item.discountPct != null && item.discountPct > 0 && (
                   <span className="inline-flex items-center gap-0.5 rounded-full bg-[color:var(--color-success)]/15 px-1.5 py-0.5 text-[10px] font-bold text-[color:var(--color-success)]">

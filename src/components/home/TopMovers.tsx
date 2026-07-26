@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@/i18n/routing";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import type { PriceMover } from "@/lib/skins/queries";
+import { useCurrency } from "@/providers/CurrencyProvider";
 import { Panel } from "./Section";
 
 function Sparkline({ points, color }: { points: number[]; color: string }) {
@@ -29,6 +30,7 @@ function Sparkline({ points, color }: { points: number[]; color: string }) {
 }
 
 function MoverRow({ mover, up }: { mover: PriceMover; up: boolean }) {
+  const { format } = useCurrency();
   const color = up ? "var(--color-success)" : "var(--color-danger)";
   return (
     <Link
@@ -65,7 +67,7 @@ function MoverRow({ mover, up }: { mover: PriceMover; up: boolean }) {
 
       <span className="w-24 shrink-0 text-right">
         <span className="block spec-value text-[13.5px] font-bold text-[color:var(--color-text)]">
-          ${mover.price.toFixed(2)}
+          {format(mover.price)}
         </span>
         <span
           className="inline-flex items-center gap-0.5 spec-value text-[11.5px] font-bold"
