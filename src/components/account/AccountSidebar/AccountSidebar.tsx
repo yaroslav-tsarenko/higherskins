@@ -4,10 +4,12 @@ import { usePathname } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/providers/AuthProvider";
-import { LayoutDashboard, Package, User, MapPin, Heart, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, User, MapPin, Heart, LogOut, Wallet } from "lucide-react";
 
 const navItems = [
   { href: "/account", icon: <LayoutDashboard size={18} strokeWidth={1.5} />, labelKey: "title" as const },
+  { href: "/account/wallet", icon: <Wallet size={18} strokeWidth={1.5} />, labelKey: "wallet" as const },
+  { href: "/account/trades", icon: <Package size={18} strokeWidth={1.5} />, labelKey: "trades" as const },
   { href: "/account/orders", icon: <Package size={18} strokeWidth={1.5} />, labelKey: "orders" as const },
   { href: "/account/profile", icon: <User size={18} strokeWidth={1.5} />, labelKey: "profile" as const },
   { href: "/account/addresses", icon: <MapPin size={18} strokeWidth={1.5} />, labelKey: "addresses" as const },

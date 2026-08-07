@@ -344,11 +344,15 @@ export interface TickerListing {
 }
 
 // Newest available listings — powers the live market ticker on the homepage.
+// Bulk imports stamp every listing with a near-identical createdAt, so a plain
+// "newest first" slice clusters into whatever weapon the import processed last
+// (often knives). We pull a wider recent pool and spread it across distinct
+// weapons so the strip always shows a varied cross-section of the market.
 export async function getRecentListings(limit = 18): Promise<TickerListing[]> {
   const rows = await prisma.skinListing.findMany({
     where: { status: "available" },
     orderBy: { createdAt: "desc" },
-    take: limit,
+    take: limit * 12,
     select: {
       id: true,
       price: true,
@@ -357,7 +361,8 @@ export async function getRecentListings(limit = 18): Promise<TickerListing[]> {
       skin: { select: { id: true, name: true, weapon: true, rarityColor: true, imageUrl: true } },
     },
   });
-  return rows.map((r) => ({
+
+  const map = (r: (typeof rows)[number]): TickerListing => ({
     id: r.id,
     skinId: r.skin.id,
     name: r.skin.name,
@@ -366,7 +371,27 @@ export async function getRecentListings(limit = 18): Promise<TickerListing[]> {
     discountPct: r.discountPct,
     rarityColor: r.skin.rarityColor,
     imageUrl: r.imageUrl ?? r.skin.imageUrl,
-  }));
+  });
+
+  // First pass: one listing per weapon for maximum variety; second pass fills
+  // any remaining slots from the leftovers so we always return `limit` items.
+  const seen = new Set<string>();
+  const picked: TickerListing[] = [];
+  const leftovers: TickerListing[] = [];
+  for (const r of rows) {
+    if (picked.length >= limit) break;
+    if (seen.has(r.skin.weapon)) {
+      leftovers.push(map(r));
+    } else {
+      seen.add(r.skin.weapon);
+      picked.push(map(r));
+    }
+  }
+  for (const item of leftovers) {
+    if (picked.length >= limit) break;
+    picked.push(item);
+  }
+  return picked;
 }
 
 export interface CategoryShowcase {

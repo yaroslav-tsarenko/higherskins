@@ -2,10 +2,12 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { fetchSourceSkins, type SourceSkin } from "./source";
 import { activePriceProvider, floatForSlot, paintSeedForSlot } from "./pricing";
+import { getItems, sihConfigured, type SihItem } from "@/lib/sih/client";
 import {
   exteriorFromLabel,
   type ExteriorCode,
   rarityMeta,
+  round2,
   seededRng,
 } from "./shared";
 
@@ -165,6 +167,60 @@ function buildListings(src: SourceSkin, mapped: ReturnType<typeof mapSkin>): Der
   return listings;
 }
 
+// SIH-sourced listings: emit an offer only for the exact market_hash_name
+// variants SIH actually has in stock, priced at SIH's real ask. Category,
+// weapon and rarity still come from the structured source so filters stay
+// accurate; SIH just decides which items exist and how much they cost.
+function buildSihListings(
+  src: SourceSkin,
+  mapped: ReturnType<typeof mapSkin>,
+  sihMap: Map<string, SihItem>,
+): DerivedListing[] {
+  const exteriors = exteriorsFor(src);
+  const listings: DerivedListing[] = [];
+
+  const variants: { stattrak: boolean; souvenir: boolean }[] = [
+    { stattrak: false, souvenir: false },
+  ];
+  if (mapped.hasStatTrak) variants.push({ stattrak: true, souvenir: false });
+  if (mapped.hasSouvenir) variants.push({ stattrak: false, souvenir: true });
+
+  for (const exterior of exteriors) {
+    for (const v of variants) {
+      const name = marketHashName(
+        mapped.name,
+        exterior,
+        EXTERIOR_LABELS[exterior],
+        v.stattrak,
+        v.souvenir,
+      );
+      const sih = sihMap.get(name);
+      if (!sih || sih.count <= 0 || !(sih.price > 0)) continue;
+
+      const price = round2(sih.price);
+      // Present a Steam reference above our ask so the marketplace still shows a
+      // "below Steam" delta. The discount is deterministic per listing name.
+      const discountRng = seededRng(`${name}:sih:disc`);
+      const discountPct = round2(4 + discountRng() * 18);
+      const steamPrice = round2(price / (1 - discountPct / 100));
+
+      listings.push({
+        marketHashName: name,
+        exterior,
+        isStatTrak: v.stattrak,
+        isSouvenir: v.souvenir,
+        float: exterior === "NA" ? null : floatForSlot(mapped.externalId, exterior, 0),
+        paintSeed: exterior === "NA" ? null : paintSeedForSlot(mapped.externalId, 0),
+        price,
+        steamPrice,
+        discountPct,
+        imageUrl: sih.image ?? mapped.imageUrl,
+      });
+    }
+  }
+  return listings;
+}
+
 export async function importSkins(opts: ImportOptions = {}): Promise<ImportResult> {
   const { dryRun = false, limit, batchSize = 40, log = () => {} } = opts;
   const start = Date.now();
@@ -176,10 +232,25 @@ export async function importSkins(opts: ImportOptions = {}): Promise<ImportResul
   if (limit) source = source.slice(0, limit);
   log(`Fetched ${source.length} skins.`);
 
+  // Real availability + prices from SIH, keyed by market_hash_name. When SIH
+  // isn't configured we fall back to the synthetic catalog so dev still works.
+  let sihMap: Map<string, SihItem> | null = null;
+  if (sihConfigured()) {
+    try {
+      sihMap = await getItems();
+      log(`Fetched ${sihMap.size} available items from SIH.`);
+    } catch (err) {
+      log(`SIH get-items failed (${err instanceof Error ? err.message : String(err)}); using synthetic catalog.`);
+    }
+  } else {
+    log(`SIH not configured; using synthetic catalog.`);
+  }
+  const source_label = sihMap ? "sih" : "bymykel";
+
   const run = dryRun
     ? null
     : await prisma.skinImportRun.create({
-        data: { source: "bymykel", dryRun, totalItems: source.length, status: "running" },
+        data: { source: source_label, dryRun, totalItems: source.length, status: "running" },
       });
 
   let created = 0;
@@ -194,7 +265,9 @@ export async function importSkins(opts: ImportOptions = {}): Promise<ImportResul
       batch.map(async (src) => {
         try {
           const mapped = mapSkin(src);
-          const listings = buildListings(src, mapped);
+          const listings = sihMap
+            ? buildSihListings(src, mapped, sihMap)
+            : buildListings(src, mapped);
           const prices = listings.map((l) => l.price);
           const lowestPrice = prices.length ? Math.min(...prices) : null;
 

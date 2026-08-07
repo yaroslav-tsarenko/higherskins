@@ -8,27 +8,26 @@ export const brand = {
   displayName: "HigherSkins",
   domain: "higherskins.com",
   url: "https://higherskins.com",
-  tagline: "The fast, fair CS2 skins marketplace.",
+  tagline: "The fast, fair CS2 skins store.",
   description:
-    "HigherSkins — a modern CS2 skins marketplace. Browse thousands of skins with live float, pattern and price data, compare across markets, track price history, and trade instantly via your Steam account.",
+    "HigherSkins — a modern CS2 skins store. Browse thousands of skins with live float, pattern and price data, compare across markets, track price history, and get them delivered instantly to your Steam account.",
   applicationName: "HigherSkins",
 
   company: {
-    legalName: "RYE FLOUR COOKIES LTD",
-    number: "15107933",
+    legalName: "HIGHER MARGINS LTD",
+    number: "15605091",
     address: {
-      line1: "304d, The Big Peg",
-      line2: "120 Vyse St",
-      city: "Birmingham",
+      line1: "20 Wenlock Road",
+      line2: "",
+      city: "London",
       region: "England",
-      postcode: "B18 6ND",
+      postcode: "N1 7GU",
       country: "United Kingdom",
     },
   },
 
   contact: {
     email: "info@higherskins.com",
-    emailB2B: "info@higherskins.com",
     phone: "+44 7450 581147",
     phoneHref: "tel:+447450581147",
     contactPage: "/contact",
@@ -48,6 +47,8 @@ export const brandAddressLine = [
   brand.company.address.region,
   brand.company.address.postcode,
   brand.company.address.country,
-].join(", ");
+]
+  .filter(Boolean)
+  .join(", ");
 
-export const brandLegalLine = `${brand.company.legalName} · Company No. ${brand.company.number} · ${brand.company.address.line1}, ${brand.company.address.line2}, ${brand.company.address.city}, ${brand.company.address.postcode}, ${brand.company.address.country}`;
+export const brandLegalLine = `${brand.company.legalName} · Company No. ${brand.company.number} · ${brandAddressLine}`;

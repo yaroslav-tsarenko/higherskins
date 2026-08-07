@@ -24,6 +24,9 @@ model User {
   newsletterDiscountUsed Boolean @default(false)
   newsletterSubscribed   Boolean @default(false)
 
+  // Prepaid wallet balance, held in the EUR base currency.
+  balance Decimal @default(0) @db.Decimal(12, 2)
+
   addresses           Address[]
   orders              Order[]
   reviews             Review[]
@@ -31,9 +34,10 @@ model User {
   passwordResetTokens PasswordResetToken[]
   newsletter          Newsletter?
 
-  steamAccount SteamAccount?
-  sessions     Session[]
-  purchases    SkinPurchase[]
+  steamAccount       SteamAccount?
+  sessions           Session[]
+  purchases          SkinPurchase[]
+  walletTransactions WalletTransaction[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -611,10 +615,33 @@ model SkinPurchase {
   currency  String      @default("USD")
   status    String      @default("pending") // pending | trade_sent | completed | failed
   tradeUrl  String?
+  provider        String? // sih | stub — trade-delivery backend that fulfilled this
+  providerOrderId String? // SIH order id, used to poll delivery status
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
   @@index([userId])
+}
+
+// Ledger of wallet movements. `amount` is signed in the EUR base currency:
+// positive credits the balance (top-ups, refunds), negative debits it
+// (purchases). Balance = sum of COMPLETED transactions.
+model WalletTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // topup | purchase | refund
+  status      String   @default("pending") // pending | completed | failed
+  amount      Decimal  @db.Decimal(12, 2)
+  currency    String   @default("EUR")
+  provider    String?  // transfermit
+  paymentId   String?  // provider-side payment id
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
 }
 
 // Idempotent catalog import run log.

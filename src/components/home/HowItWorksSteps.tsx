@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@/i18n/routing";
-import { ArrowRight, Search, ShieldCheck, Repeat } from "lucide-react";
+import { ArrowRight, Search, ShieldCheck, PackageCheck } from "lucide-react";
 import { Panel } from "./Section";
 
 const STEPS = [
@@ -22,10 +22,10 @@ const STEPS = [
     accent: "var(--color-accent)",
   },
   {
-    icon: Repeat,
+    icon: PackageCheck,
     title: "Trade lands in minutes",
-    body: "Accept the Steam trade offer and the skin is yours. Selling works the same way in reverse — list from your inventory and get paid on delivery.",
-    cta: { label: "Start selling", href: "/sell" },
+    body: "Accept the Steam trade offer and the skin is yours. Our bot delivers the moment your payment clears — no waiting, no manual steps.",
+    cta: { label: "See how it works", href: "/how-it-works" },
     accent: "var(--color-success)",
   },
 ];

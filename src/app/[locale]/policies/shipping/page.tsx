@@ -14,7 +14,7 @@ export default function TradeDeliveryPolicyPage() {
       <ContactBlock />
       <p>
         In this Policy, &ldquo;Higherskins&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo; or &ldquo;our&rdquo;
-        means RYE FLOUR COOKIES LTD. &ldquo;Customer&rdquo;, &ldquo;you&rdquo; or &ldquo;your&rdquo; means the
+        means HIGHER MARGINS LTD. &ldquo;Customer&rdquo;, &ldquo;you&rdquo; or &ldquo;your&rdquo; means the
         person placing an order through the Website.
       </p>
       <p>

@@ -6,14 +6,14 @@ export default function CookiePolicyPage() {
   return (
     <PolicyLayout title="Cookie Policy" lastUpdated="29 May 2026">
       <p>
-        This Cookie Policy explains how RYE FLOUR COOKIES LTD, trading as Higherskins, uses cookies and similar
+        This Cookie Policy explains how HIGHER MARGINS LTD, trading as Higherskins, uses cookies and similar
         technologies on www.higherskins.com.
       </p>
       <p>The Website is operated by:</p>
       <ContactBlock />
       <p>
         In this Cookie Policy, &ldquo;Higherskins&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo; or
-        &ldquo;our&rdquo; means RYE FLOUR COOKIES LTD. &ldquo;You&rdquo; or &ldquo;your&rdquo; means any visitor,
+        &ldquo;our&rdquo; means HIGHER MARGINS LTD. &ldquo;You&rdquo; or &ldquo;your&rdquo; means any visitor,
         customer, account holder, business customer, or user of the Website.
       </p>
       <p>

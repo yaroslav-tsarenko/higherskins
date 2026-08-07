@@ -75,7 +75,7 @@ export async function POST(req: Request) {
   const price = Number(listing.price);
   const fees = computeFees(price);
 
-  if (getWalletBalance() < fees.total) {
+  if ((await getWalletBalance(user.id)) < fees.total) {
     return NextResponse.json(
       {
         code: "insufficient_balance",
@@ -98,6 +98,25 @@ export async function POST(req: Request) {
     );
   }
 
+  // Atomically debit the wallet: the `balance >= total` guard prevents a race
+  // where two concurrent purchases both pass the check above and overspend.
+  const debited = await prisma.user.updateMany({
+    where: { id: user.id, balance: { gte: fees.total } },
+    data: { balance: { decrement: fees.total } },
+  });
+  if (debited.count === 0) {
+    await prisma.skinListing
+      .updateMany({ where: { id: listingId }, data: { status: "available" } })
+      .catch(() => {});
+    return NextResponse.json(
+      {
+        code: "insufficient_balance",
+        error: "Insufficient balance. Top up your wallet to complete this purchase.",
+      },
+      { status: 402 },
+    );
+  }
+
   let purchase;
   try {
     purchase = await prisma.skinPurchase.create({
@@ -111,10 +130,24 @@ export async function POST(req: Request) {
       },
       select: { id: true, status: true, createdAt: true },
     });
+    await prisma.walletTransaction.create({
+      data: {
+        userId: user.id,
+        type: "purchase",
+        status: "completed",
+        amount: -fees.total,
+        currency: "EUR",
+        description: listing.skin.name,
+      },
+    });
   } catch {
-    // Roll the listing back so it stays purchasable if we couldn't record it.
+    // Roll everything back so the listing stays purchasable and the buyer is
+    // not charged if we couldn't record the purchase.
     await prisma.skinListing
       .updateMany({ where: { id: listingId }, data: { status: "available" } })
+      .catch(() => {});
+    await prisma.user
+      .update({ where: { id: user.id }, data: { balance: { increment: fees.total } } })
       .catch(() => {});
     return NextResponse.json(
       { code: "error", error: "Could not complete the purchase. Try again." },
@@ -128,6 +161,8 @@ export async function POST(req: Request) {
     purchaseId: purchase.id,
     tradeUrl: steam.tradeUrl,
     marketHashName: listing.marketHashName,
+    steamId64: steam.steamId64,
+    tradeToken: steam.tradeToken ?? undefined,
   });
 
   return NextResponse.json({

@@ -5,9 +5,13 @@ const OPENID_NS = "http://specs.openid.net/auth/2.0";
 const IDENTIFIER_SELECT = "http://specs.openid.net/auth/2.0/identifier_select";
 
 export function getBaseUrl(): string {
+  // Prefer the canonical public site URL so Steam always redirects back to the
+  // real domain — not the protected Vercel deployment URL (which shows the
+  // "You Need Access" SSO gate). APP_URL still wins for local overrides.
   return (
     process.env.APP_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
     "http://localhost:3000"
   ).replace(/\/$/, "");

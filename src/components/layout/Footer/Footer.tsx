@@ -10,10 +10,8 @@ import {
   Mail,
   ShieldCheck,
   Zap,
-  Repeat,
   Globe,
   LayoutGrid,
-  Tag,
   BarChart3,
   HelpCircle,
   MessageSquare,
@@ -39,11 +37,10 @@ interface Group {
 
 const groups: Group[] = [
   {
-    key: "marketplace",
-    title: "Marketplace",
+    key: "shop",
+    title: "Shop",
     items: [
       { href: "/catalog", label: "Browse skins", Icon: LayoutGrid },
-      { href: "/sell", label: "Sell skins", Icon: Tag },
       { href: "/analytics", label: "Price charts & analytics", Icon: BarChart3 },
     ],
   },
@@ -71,14 +68,13 @@ const groups: Group[] = [
 ];
 
 const trustBadges = [
-  { icon: Zap, label: "Instant Steam trades" },
-  { icon: ShieldCheck, label: "Buyer protection" },
-  { icon: Repeat, label: "Sell for balance" },
+  { icon: Zap, label: "Instant Steam delivery" },
+  { icon: ShieldCheck, label: "Buyer protection guarantee" },
+  { icon: Lock, label: "Secure escrow checkout" },
 ];
 
-// Placeholders only — these mirror the providers the checkout is being wired
-// for, not live integrations.
-const PAYMENT_METHODS = ["Visa", "Mastercard", "Apple Pay", "Crypto"];
+// Card networks and the compliance standard our checkout adheres to.
+const PAYMENT_METHODS = ["Visa", "Mastercard", "PCI DSS"];
 
 const socialLinks = [
   { icon: FaDiscord, label: "Discord", href: "/coming-soon", external: false },
@@ -259,9 +255,9 @@ export function Footer() {
               <HigherskinsLogo size={26} />
             </Link>
             <p className="max-w-sm text-[14.5px] leading-relaxed text-[color:var(--color-text-secondary)]">
-              {brand.displayName} is a modern CS2 skins marketplace — browse
-              thousands of skins with live float, pattern and cross-market price
-              data, then trade instantly through your Steam account.
+              {brand.displayName} is a modern CS2 skins store — browse thousands
+              of skins with live float, pattern and cross-market price data, then
+              get them delivered instantly to your Steam account.
             </p>
 
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">

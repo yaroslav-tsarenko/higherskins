@@ -41,6 +41,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing referenceId" }, { status: 400 });
     }
 
+    // Wallet top-ups reference a WalletTransaction. Credit the balance exactly
+    // once, keyed off the transaction still being pending, so repeated webhook
+    // deliveries never double-credit.
+    const walletTx = await prisma.walletTransaction.findUnique({
+      where: { id: referenceId },
+    });
+    if (walletTx) {
+      if (walletTx.status !== "pending") {
+        return NextResponse.json({ ok: true });
+      }
+      if (paymentState === "COMPLETED") {
+        await prisma.$transaction([
+          prisma.walletTransaction.update({
+            where: { id: walletTx.id },
+            data: { status: "completed", paymentId },
+          }),
+          prisma.user.update({
+            where: { id: walletTx.userId },
+            data: { balance: { increment: walletTx.amount } },
+          }),
+        ]);
+        console.log(`[Transfermit Webhook] Wallet top-up ${walletTx.id} credited`);
+      } else if (["DECLINED", "ERROR", "CANCELLED"].includes(paymentState)) {
+        await prisma.walletTransaction.update({
+          where: { id: walletTx.id },
+          data: { status: "failed", paymentId },
+        });
+        console.log(`[Transfermit Webhook] Wallet top-up ${walletTx.id} failed (${paymentState})`);
+      }
+      return NextResponse.json({ ok: true });
+    }
+
     const order = await prisma.order.findUnique({
       where: { id: referenceId },
     });

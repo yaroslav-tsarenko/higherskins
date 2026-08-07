@@ -1,5 +1,6 @@
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs/Breadcrumbs";
 import { ReactNode } from "react";
+import { brand, brandAddressLine } from "@/lib/brand";
 
 interface PolicyLayoutProps {
   title: string;
@@ -35,15 +36,13 @@ export function ContactBlock() {
   return (
     <div className="mt-2 rounded-md border border-[color:var(--color-line)] bg-[color:var(--color-bg-secondary)] px-4 py-3.5 text-sm leading-relaxed">
       <p>
-        <strong>RYE FLOUR COOKIES LTD</strong>
+        <strong>{brand.company.legalName}</strong>
         <br />
-        Registration number: 16020956
+        Registration number: {brand.company.number}
         <br />
-        Registered office: Academy House, 11 Dunraven Place, Bridgend, Mid Glamorgan, CF31 1JF, United Kingdom
+        Registered office: {brandAddressLine}
         <br />
-        General email: info@higherskins.com
-        <br />
-        Wholesale (B2B): b2b@higherskins.com
+        General email: {brand.contact.email}
       </p>
     </div>
   );

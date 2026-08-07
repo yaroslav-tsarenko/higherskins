@@ -23,8 +23,8 @@ const ITEMS = [
     a: "Steam charges a 15% fee on every sale and the funds are locked to your wallet. We settle in real money and pass most of that spread back, which is where the discount on each listing comes from.",
   },
   {
-    q: "Can I sell skins from my own inventory?",
-    a: "Yes. Connect your Steam account, pick the items you want to list, set your price and get paid once the trade is delivered.",
+    q: "Do I need a Steam account to buy?",
+    a: "You can sign up and browse with just an email. A Steam account and trade URL are only needed at checkout, so our bot can deliver the skin to your inventory.",
   },
 ];
 

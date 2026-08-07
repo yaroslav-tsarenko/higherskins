@@ -9,7 +9,7 @@ import {
   PackageCheck,
   ShieldCheck,
   Link2,
-  Repeat,
+  BadgeCheck,
   Clock,
 } from "lucide-react";
 
@@ -36,21 +36,21 @@ const steps = [
   },
 ];
 
-const sellSteps = [
+const perks = [
   {
-    Icon: Link2,
-    title: "Link your Steam",
-    body: "Connect your Steam account and add your trade URL so our bot can send and receive offers securely.",
+    Icon: BadgeCheck,
+    title: "Verified authenticity",
+    body: "Every listing shows live float, pattern index and cross-market pricing, so you know exactly what you're getting before you buy.",
   },
   {
-    Icon: Repeat,
-    title: "List for balance",
-    body: "Pick the skins you want to sell and set your price. Once a buyer purchases, our bot handles the trade automatically.",
+    Icon: ShieldCheck,
+    title: "Escrowed payments",
+    body: "Your balance is only captured once the trade offer is confirmed. If delivery can't complete, you're refunded automatically.",
   },
   {
-    Icon: Wallet,
-    title: "Get paid instantly",
-    body: "The sale value lands in your HigherSkins balance the moment the trade completes — ready to spend or withdraw.",
+    Icon: Clock,
+    title: "Delivery in seconds",
+    body: "Our bot sends the Steam trade offer the moment payment clears — most skins arrive in your inventory within seconds.",
   },
 ];
 
@@ -109,16 +109,16 @@ export default function HowItWorksPage() {
         ))}
       </section>
 
-      {/* Selling */}
+      {/* Why buy with us */}
       <section className="mt-12">
         <div className="mb-6 text-center">
-          <span className="eyebrow">Selling skins</span>
+          <span className="eyebrow">Why {brand.displayName}</span>
           <h2 className="mt-2 font-serif text-2xl font-medium tracking-tight text-[color:var(--color-text)] sm:text-3xl">
-            Turn your inventory into balance
+            Every purchase, fully protected
           </h2>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {sellSteps.map(({ Icon, title, body }) => (
+          {perks.map(({ Icon, title, body }) => (
             <div
               key={title}
               className="rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-bg-elevated)] p-6"
@@ -176,7 +176,7 @@ export default function HowItWorksPage() {
         </p>
         <Link
           href="/catalog"
-          className="mt-6 inline-flex items-center gap-2 rounded-full bg-[color:var(--color-primary-fg)] px-6 py-3 text-sm font-bold text-[color:var(--color-primary)] transition-transform hover:scale-[1.02]"
+          className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-[#4C1D95] shadow-sm transition-transform hover:scale-[1.02]"
         >
           Browse the market <ArrowRight size={15} />
         </Link>

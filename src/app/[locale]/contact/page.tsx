@@ -10,7 +10,7 @@ import { Breadcrumbs } from "@/components/layout/Breadcrumbs/Breadcrumbs";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Mail, MapPin, Clock, Send, Phone,
+  Mail, MapPin, Clock, Send,
   CheckCircle, MessageSquare, HelpCircle, ShieldCheck,
 } from "lucide-react";
 import { brand, brandAddressLine } from "@/lib/brand";
@@ -20,7 +20,7 @@ const INPUT_CLASS =
 
 const CONTACT_INFO = [
   { icon: Mail, title: "Email us", detail: brand.contact.email, sub: "General enquiries — reply within 24h" },
-  { icon: Phone, title: "Call our team", detail: brand.contact.phone, sub: "Sales, order help & product advice" },
+  { icon: MessageSquare, title: "Live support", detail: "Chat with our team", sub: "Use the form — we reply fast" },
   { icon: MapPin, title: "Registered office", detail: `${brand.company.address.city}, ${brand.company.address.country}`, sub: `${brand.company.legalName} · Co. No. ${brand.company.number}`, tooltip: `${brandAddressLine}\nCompany No. ${brand.company.number}` },
   { icon: Clock, title: "Support hours", detail: "Mon–Fri 9:00–18:00", sub: "Sat 10:00–14:00 (GMT)" },
 ];
@@ -290,8 +290,8 @@ export default function ContactPage() {
                 <span className="font-semibold">Within 24h</span>
               </div>
               <div className="flex justify-between text-[13px]">
-                <span className="opacity-70">Wholesale (B2B)</span>
-                <span className="font-semibold">Within 48h</span>
+                <span className="opacity-70">Trade & delivery</span>
+                <span className="font-semibold">Within a few hours</span>
               </div>
             </div>
           </div>

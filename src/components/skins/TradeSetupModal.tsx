@@ -40,6 +40,7 @@ export function TradeSetupModal({
   const [buying, setBuying] = useState(false);
   const [buyError, setBuyError] = useState<string | null>(null);
   const [soldOut, setSoldOut] = useState(false);
+  const [needTopUp, setNeedTopUp] = useState(false);
   const [done, setDone] = useState(false);
 
   if (!open) return null;
@@ -97,6 +98,8 @@ export function TradeSetupModal({
           setState("no-trade-url");
         } else if (json.code === "sold" || json.code === "not_found") {
           setSoldOut(true);
+        } else if (json.code === "insufficient_balance") {
+          setNeedTopUp(true);
         }
         setBuyError(json.error ?? "Could not complete the purchase.");
         return;
@@ -279,6 +282,13 @@ export function TradeSetupModal({
                   >
                     Browse other offers
                   </button>
+                ) : needTopUp ? (
+                  <Link
+                    href="/account/wallet"
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[color:var(--color-primary)] px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-glow-violet)]"
+                  >
+                    Top up your wallet
+                  </Link>
                 ) : (
                   <button
                     onClick={confirmPurchase}

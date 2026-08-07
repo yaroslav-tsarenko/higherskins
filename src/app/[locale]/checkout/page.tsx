@@ -396,7 +396,7 @@ export default function CheckoutPage() {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label className={LABEL}>{t("postalCode")} *</label>
-                    <input className={`${INPUT_PLAIN} ${errors.shipping?.postalCode ? "!border-[color:var(--color-danger)]" : ""}`} placeholder="CF31 1JF" {...register("shipping.postalCode")} />
+                    <input className={`${INPUT_PLAIN} ${errors.shipping?.postalCode ? "!border-[color:var(--color-danger)]" : ""}`} placeholder="SW1A 1AA" {...register("shipping.postalCode")} />
                     {errors.shipping?.postalCode && <span className={ERROR}>{errors.shipping.postalCode.message}</span>}
                   </div>
                   <div>

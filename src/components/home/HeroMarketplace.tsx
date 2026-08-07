@@ -127,14 +127,14 @@ export function HeroMarketplace({ stats, listedToday, floaters }: HeroProps) {
             <Zap size={12} /> Instant Steam trades
           </span>
           <h1 className="mt-4 font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-[color:var(--color-text)] sm:text-5xl lg:text-[3.4rem]">
-            Buy &amp; sell CS2 skins.{" "}
+            Buy CS2 skins.{" "}
             <span className="bg-gradient-to-r from-[color:var(--color-primary)] to-[color:var(--color-accent)] bg-clip-text text-transparent">
               Instantly.
             </span>
           </h1>
           <p className="mt-4 max-w-lg text-[15.5px] leading-relaxed text-[color:var(--color-text-secondary)]">
             Thousands of skins with live float, pattern and cross-market price data.
-            Trade straight from your Steam inventory — fast, fair, secure.
+            Delivered straight to your Steam inventory — fast, fair, secure.
           </p>
 
           <div className="mt-7 flex flex-wrap gap-3">
@@ -145,16 +145,16 @@ export function HeroMarketplace({ stats, listedToday, floaters }: HeroProps) {
               Browse skins <ArrowRight size={16} />
             </Link>
             <Link
-              href="/sell"
+              href="/how-it-works"
               className="inline-flex h-12 items-center gap-2 rounded-full border border-[color:var(--color-border)] px-6 text-sm font-bold text-[color:var(--color-text)] transition hover:border-[color:var(--color-primary)]"
             >
-              <Wallet size={16} /> Sell skins
+              <ShieldCheck size={16} /> How it works
             </Link>
           </div>
 
           <div className="mt-5 flex items-center gap-2 text-[13px] text-[color:var(--color-text-tertiary)]">
             <ShieldCheck size={15} className="text-[color:var(--color-accent)]" />
-            Buyer protection on every trade · No password ever shared
+            Buyer protection on every order · No password ever shared
           </div>
         </div>
 

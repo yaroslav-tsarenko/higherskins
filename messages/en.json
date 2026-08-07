@@ -147,6 +147,8 @@
     "profile": "Profile",
     "addresses": "Addresses",
     "wishlist": "Watchlist",
+    "wallet": "Wallet",
+    "trades": "My Trades",
     "orderNumber": "Order #{number}",
     "orderStatus": "Status",
     "orderDate": "Date",

@@ -422,7 +422,7 @@ export default function RegisterPage() {
                     type="text"
                     value={form.postalCode}
                     onChange={set("postalCode")}
-                    placeholder="CF31 1JF"
+                    placeholder="SW1A 1AA"
                     className={`${INPUT_PLAIN_CLASS} ${errorBorder("postalCode")}`}
                   />
                   {renderError("postalCode")}

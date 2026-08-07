@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { brand, brandAddressLine } from "@/lib/brand";
 
 let resend: Resend | null = null;
 
@@ -88,7 +89,7 @@ function emailWrapper(content: string, options: { preheader?: string } = {}): st
     </div>
     <div style="text-align:center;margin-top:24px;font-size:12px;color:#999;line-height:1.6;">
       <p style="margin:0 0 4px;">&copy; ${new Date().getFullYear()} Higherskins. All rights reserved.</p>
-      <p style="margin:0;">RYE FLOUR COOKIES LTD &middot; Bridgend, Mid Glamorgan, Academy House, 11 Dunraven Place &middot; Reg. 16020956 &middot; <a href="${getSiteUrl()}" style="color:${BRAND_COLOR};text-decoration:none;">higherskins.com</a></p>
+      <p style="margin:0;">${brand.company.legalName} &middot; ${brandAddressLine} &middot; Reg. ${brand.company.number} &middot; <a href="${getSiteUrl()}" style="color:${BRAND_COLOR};text-decoration:none;">${brand.domain}</a></p>
       <p style="margin:8px 0 0;">
         <a href="${getSiteUrl()}/policies/privacy" style="color:#999;text-decoration:underline;margin:0 6px;">Privacy</a>
         <a href="${getSiteUrl()}/policies/terms" style="color:#999;text-decoration:underline;margin:0 6px;">Terms</a>
@@ -133,7 +134,7 @@ export async function sendWelcomeEmail(email: string, name?: string | null): Pro
       `
       <h1 style="margin:0 0 16px;font-size:22px;font-weight:800;color:${TEXT_COLOR};">${greeting}, welcome to Higherskins!</h1>
       <p style="color:${MUTED_COLOR};line-height:1.6;margin:0 0 16px;">
-        Your account is ready. Link your Steam account and start buying and selling CS2 skins with instant, secure delivery.
+        Your account is ready. Link your Steam account and start buying CS2 skins with instant, secure delivery.
       </p>
       <div style="background:#f9f9f9;border-radius:8px;padding:16px;margin:0 0 24px;">
         <p style="margin:0 0 8px;font-weight:600;color:${TEXT_COLOR};">What you can do now:</p>
@@ -381,11 +382,11 @@ export async function sendOrderInvoiceEmail(data: OrderEmailData): Promise<boole
           <td style="width:50%;vertical-align:top;padding-right:12px;">
             <p style="margin:0 0 4px;font-size:11px;color:#999;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">From</p>
             <p style="margin:0;font-size:13px;color:${TEXT_COLOR};line-height:1.55;">
-              <strong>RYE FLOUR COOKIES LTD</strong><br />
-              Registration number: 16020956<br />
-              Academy House, 11 Dunraven Place<br />
-              Bridgend, Mid Glamorgan<br />
-              Romania
+              <strong>${brand.company.legalName}</strong><br />
+              Registration number: ${brand.company.number}<br />
+              ${brand.company.address.line1}<br />
+              ${brand.company.address.city}, ${brand.company.address.postcode}<br />
+              ${brand.company.address.country}
             </p>
           </td>
           <td style="width:50%;vertical-align:top;padding-left:12px;">

@@ -15,7 +15,6 @@ import {
   Repeat,
   Link2,
   BarChart3,
-  Tag,
   LayoutGrid,
   Shield,
   ArrowRight,
@@ -44,7 +43,6 @@ interface SkinSuggestion {
 
 const NAV: { href: string; label: string; Icon: React.ElementType }[] = [
   { href: "/catalog", label: "Market", Icon: LayoutGrid },
-  { href: "/sell", label: "Sell", Icon: Tag },
   { href: "/analytics", label: "Analytics", Icon: BarChart3 },
 ];
 

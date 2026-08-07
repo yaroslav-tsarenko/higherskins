@@ -129,7 +129,7 @@ export default async function HomePage() {
           <SectionHead
             icon={BarChart3}
             eyebrow="Market pulse"
-            title="Marketplace at a glance"
+            title="The market at a glance"
             description="Live numbers pulled straight from the listing book — supply, pricing and settled trades update as the market moves."
             href="/analytics"
             cta="Full analytics"
@@ -269,7 +269,7 @@ export default async function HomePage() {
             icon={Sparkles}
             eyebrow="Fresh drops"
             title="New listings"
-            description="The most recent items added to the marketplace."
+            description="The most recent items added to the store."
             href="/catalog?sort=newest"
             cta="See what's new"
           />

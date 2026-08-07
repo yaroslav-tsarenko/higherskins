@@ -14,7 +14,7 @@ export default function TermsPage() {
       <ContactBlock />
       <p>
         In these Terms, &ldquo;Higherskins&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo; or &ldquo;our&rdquo; means
-        RYE FLOUR COOKIES LTD. &ldquo;Customer&rdquo;, &ldquo;you&rdquo; or &ldquo;your&rdquo; means any person
+        HIGHER MARGINS LTD. &ldquo;Customer&rdquo;, &ldquo;you&rdquo; or &ldquo;your&rdquo; means any person
         accessing the Website, placing an order, or otherwise using our services.
       </p>
       <p>
@@ -26,7 +26,7 @@ export default function TermsPage() {
       <h2>1. Scope of These Terms</h2>
       <p>1.1 These Terms apply to all use of the Website and all purchases made through Higherskins.</p>
       <p>
-        1.2 Higherskins is an online marketplace for buying and selling digital in-game items
+        1.2 Higherskins is an online store for buying digital in-game items
         (&ldquo;skins&rdquo;) for Counter-Strike 2 (CS2). Items are delivered digitally through the Steam
         trading system.
       </p>
@@ -41,7 +41,7 @@ export default function TermsPage() {
 
       <h2>2. Relationship with Valve and Steam</h2>
       <p>
-        2.1 Higherskins is an independent third-party marketplace. We are not affiliated with, endorsed by,
+        2.1 Higherskins is an independent third-party store. We are not affiliated with, endorsed by,
         sponsored by, or associated with Valve Corporation, Steam, or Counter-Strike 2.
       </p>
       <p>
@@ -219,7 +219,7 @@ export default function TermsPage() {
       <h2>13. Intellectual Property</h2>
       <p>
         13.1 All content on the Website, including text, layout, branding, logos, graphics, icons, and design
-        elements, belongs to Higherskins, RYE FLOUR COOKIES LTD, or its licensors, except for third-party marks
+        elements, belongs to Higherskins, HIGHER MARGINS LTD, or its licensors, except for third-party marks
         and in-game imagery owned by their respective rights holders.
       </p>
       <p>

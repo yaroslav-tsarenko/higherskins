@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SlidersHorizontal, X, Search, Check } from "lucide-react";
 import { EXTERIORS, RARITY_TIERS, type ExteriorCode } from "@/lib/skins/shared";
 import type { CatalogItem, CatalogResult } from "@/lib/skins/queries";
+import { useCurrency } from "@/providers/CurrencyProvider";
 import { SkinCard, SkinCardSkeleton } from "./SkinCard";
 
 interface Facets {
@@ -38,6 +39,7 @@ export function CatalogClient({ facets }: { facets: Facets }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
+  const { currency, symbol, rates } = useCurrency();
 
   // Filter state derived from URL on first render.
   const [search, setSearch] = useState(params.get("q") ?? "");
@@ -79,11 +81,36 @@ export function CatalogClient({ facets }: { facets: Facets }) {
     return p.toString();
   }, [debouncedSearch, categories, weapons, rarities, exteriors, priceMin, priceMax, floatMax, statTrak, souvenir, sort]);
 
+  // Tracks the querystring we last wrote to the URL ourselves, so the
+  // param-sync effect below can tell our own pushes apart from external
+  // navigation (e.g. the header category links).
+  const lastSyncedRef = useRef(params.toString());
+
   // Sync URL (shareable) whenever filters change.
   useEffect(() => {
+    lastSyncedRef.current = queryString;
     router.replace(`${pathname}${queryString ? `?${queryString}` : ""}`, { scroll: false });
     setPage(1);
   }, [queryString, pathname, router]);
+
+  // Re-hydrate filters when the URL changes from the outside (header quick
+  // categories, footer links, back/forward) instead of from our own push.
+  const paramsStr = params.toString();
+  useEffect(() => {
+    if (paramsStr === lastSyncedRef.current) return;
+    lastSyncedRef.current = paramsStr;
+    setSearch(params.get("q") ?? "");
+    setCategories(csv(params.get("category")));
+    setWeapons(csv(params.get("weapon")));
+    setRarities(csv(params.get("rarity")));
+    setExteriors(csv(params.get("exterior")) as ExteriorCode[]);
+    setPriceMin(params.get("priceMin") ?? "");
+    setPriceMax(params.get("priceMax") ?? "");
+    setFloatMax(params.get("floatMax") ?? "");
+    setStatTrak(params.get("stattrak") === "1");
+    setSouvenir(params.get("souvenir") === "1");
+    setSort(params.get("sort") ?? "price_asc");
+  }, [paramsStr, params]);
 
   // Fetch catalog page.
   const abortRef = useRef<AbortController | null>(null);
@@ -96,6 +123,12 @@ export function CatalogClient({ facets }: { facets: Facets }) {
       try {
         const p = new URLSearchParams(queryString);
         p.set("page", String(pageNum));
+        // Prices are stored in the base currency (EUR); the inputs are in the
+        // currency picked in the header, so convert back to base before filtering.
+        const rate = rates[currency] || 1;
+        const toBase = (v: string) => (Math.round((Number(v) / rate) * 100) / 100).toString();
+        if (priceMin) p.set("priceMin", toBase(priceMin));
+        if (priceMax) p.set("priceMax", toBase(priceMax));
         const res = await fetch(`/api/skins?${p.toString()}`, { signal: ac.signal });
         const json = (await res.json()) as CatalogResult;
         setData(json);
@@ -106,7 +139,7 @@ export function CatalogClient({ facets }: { facets: Facets }) {
         setLoading(false);
       }
     },
-    [queryString],
+    [queryString, priceMin, priceMax, currency, rates],
   );
 
   useEffect(() => {
@@ -202,8 +235,9 @@ export function CatalogClient({ facets }: { facets: Facets }) {
       </FilterGroup>
 
       {/* price */}
-      <FilterGroup title="Price (USD)">
+      <FilterGroup title={`Price (${currency})`}>
         <div className="flex items-center gap-2">
+          <span className="text-sm text-[color:var(--color-text-tertiary)]">{symbol}</span>
           <input
             type="number"
             inputMode="decimal"
