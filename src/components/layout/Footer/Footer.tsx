@@ -28,6 +28,9 @@ import { motion } from "framer-motion";
 import { HigherskinsLogo } from "../HigherskinsLogo";
 import { brand } from "@/lib/brand";
 import { useCurrency } from "@/providers/CurrencyProvider";
+import visaLogo from "@/assets/visa-logo.svg";
+import mastercardLogo from "@/assets/mastercard-logo.svg";
+import pciDssLogo from "@/assets/pci-dss-compliant-logo-vector.svg";
 
 interface Group {
   key: string;
@@ -74,7 +77,13 @@ const trustBadges = [
 ];
 
 // Card networks and the compliance standard our checkout adheres to.
-const PAYMENT_METHODS = ["Visa", "Mastercard", "PCI DSS"];
+const PAYMENT_METHODS = [
+  { src: visaLogo, label: "Visa", logoClass: "max-h-5" },
+  { src: mastercardLogo, label: "Mastercard", logoClass: "max-h-5" },
+  // PCI DSS artwork carries a lot of internal padding, so it needs a taller cap
+  // to read at the same optical size as the card logos.
+  { src: pciDssLogo, label: "PCI DSS compliant", logoClass: "max-h-8" },
+];
 
 const socialLinks = [
   { icon: FaDiscord, label: "Discord", href: "/coming-soon", external: false },
@@ -323,10 +332,16 @@ export function Footer() {
               </span>
               {PAYMENT_METHODS.map((m) => (
                 <span
-                  key={m}
-                  className="inline-flex h-8 items-center rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg)] px-2.5 font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] text-[color:var(--color-text-secondary)]"
+                  key={m.label}
+                  title={m.label}
+                  className="inline-flex h-9 w-[64px] items-center justify-center rounded-lg border border-[color:var(--color-border)] bg-white px-2"
                 >
-                  {m}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={m.src.src}
+                    alt={m.label}
+                    className={`w-auto object-contain ${m.logoClass}`}
+                  />
                 </span>
               ))}
             </div>
