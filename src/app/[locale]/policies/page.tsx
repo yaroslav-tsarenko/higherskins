@@ -10,6 +10,7 @@ const policies = [
   { label: "Cookie Policy", href: "/policies/cookies" },
   { label: "Refunds and Cancellation Policy", href: "/policies/returns" },
   { label: "Payment Policy", href: "/policies/payment" },
+  { label: "Complaints and Dispute Resolution Policy", href: "/policies/complaints" },
 ];
 
 export default function PoliciesIndexPage() {

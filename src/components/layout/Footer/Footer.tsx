@@ -70,6 +70,16 @@ const groups: Group[] = [
   },
 ];
 
+const legalLinks = [
+  { href: "/policies/terms", label: "Terms of service" },
+  { href: "/policies/privacy", label: "Privacy policy" },
+  { href: "/policies/cookies", label: "Cookie policy" },
+  { href: "/policies/shipping", label: "Trade delivery policy" },
+  { href: "/policies/returns", label: "Refunds & cancellation" },
+  { href: "/policies/payment", label: "Payment policy" },
+  { href: "/policies/complaints", label: "Complaints & disputes" },
+];
+
 const trustBadges = [
   { icon: Zap, label: "Instant Steam delivery" },
   { icon: ShieldCheck, label: "Buyer protection guarantee" },
@@ -161,16 +171,13 @@ function LegalGroup() {
         className={`grid grid-cols-1 gap-y-2.5 pb-4 md:gap-y-3 ${open ? "grid" : "hidden md:grid"}`}
         aria-hidden={!open}
       >
-        <li>
-          <Link href="/policies/terms" className="text-[13.5px] text-[color:var(--color-text)]/70 transition-colors hover:text-[color:var(--color-primary)]">
-            Terms of service
-          </Link>
-        </li>
-        <li>
-          <Link href="/policies/privacy" className="text-[13.5px] text-[color:var(--color-text)]/70 transition-colors hover:text-[color:var(--color-primary)]">
-            Privacy policy
-          </Link>
-        </li>
+        {legalLinks.map((it) => (
+          <li key={it.href}>
+            <Link href={it.href} className="text-[13.5px] text-[color:var(--color-text)]/70 transition-colors hover:text-[color:var(--color-primary)]">
+              {it.label}
+            </Link>
+          </li>
+        ))}
         <li>
           <button
             type="button"
