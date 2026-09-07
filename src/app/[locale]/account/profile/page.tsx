@@ -142,7 +142,7 @@ export default function ProfilePage() {
               </div>
               <a
                 href={steamLinkHref}
-                className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#171a21] px-4 text-sm font-bold text-white transition hover:brightness-125"
+                className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#2a475e] px-4 text-sm font-bold text-white transition hover:brightness-110"
               >
                 Link Steam
               </a>

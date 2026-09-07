@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { fetchSourceSkins, type SourceSkin } from "./source";
-import { activePriceProvider, floatForSlot, paintSeedForSlot } from "./pricing";
+import { activePriceProvider, enforceMinPrice, floatForSlot, paintSeedForSlot } from "./pricing";
 import { getItems, sihConfigured, type SihItem } from "@/lib/sih/client";
 import {
   exteriorFromLabel,
@@ -197,12 +197,12 @@ function buildSihListings(
       const sih = sihMap.get(name);
       if (!sih || sih.count <= 0 || !(sih.price > 0)) continue;
 
-      const price = round2(sih.price);
       // Present a Steam reference above our ask so the marketplace still shows a
       // "below Steam" delta. The discount is deterministic per listing name.
       const discountRng = seededRng(`${name}:sih:disc`);
       const discountPct = round2(4 + discountRng() * 18);
-      const steamPrice = round2(price / (1 - discountPct / 100));
+      // Floor cheap SIH asks so the catalog never lists cent-priced items.
+      const { price, steamPrice } = enforceMinPrice(round2(sih.price), discountPct);
 
       listings.push({
         marketHashName: name,

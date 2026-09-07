@@ -15,16 +15,7 @@ const KIND_META: Record<ActivityKind, { label: string; icon: React.ElementType; 
   price_drop: { label: "price drop", icon: TrendingDown, color: "var(--color-warning)" },
 };
 
-function relativeTime(iso: string, now: number | null): string {
-  if (now == null) return "just now";
-  const diff = Math.max(0, Math.floor((now - new Date(iso).getTime()) / 1000));
-  if (diff < 60) return `${diff}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
-}
-
-function ActivityRow({ event, now }: { event: ActivityEvent; now: number | null }) {
+function ActivityRow({ event }: { event: ActivityEvent }) {
   const { format } = useCurrency();
   const meta = KIND_META[event.kind];
   const Icon = meta.icon;
@@ -75,9 +66,6 @@ function ActivityRow({ event, now }: { event: ActivityEvent; now: number | null 
         <span className="block spec-value text-[13.5px] font-bold text-[color:var(--color-text)]">
           {format(event.price)}
         </span>
-        <span className="block font-mono text-[10px] tabular-nums text-[color:var(--color-text-tertiary)]">
-          {relativeTime(event.at, now)}
-        </span>
       </span>
     </Link>
   );
@@ -98,23 +86,16 @@ export function LiveActivityFeed({
   intervalMs?: number;
 }) {
   const [offset, setOffset] = useState(0);
-  // Stays null through SSR and the first paint so timestamps can't hydrate stale.
-  const [now, setNow] = useState<number | null>(null);
 
   useEffect(() => {
-    const frame = requestAnimationFrame(() => setNow(Date.now()));
     if (events.length <= visible || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return () => cancelAnimationFrame(frame);
+      return;
     }
 
     const id = setInterval(() => {
       setOffset((o) => (o + 1) % events.length);
-      setNow(Date.now());
     }, intervalMs);
-    return () => {
-      cancelAnimationFrame(frame);
-      clearInterval(id);
-    };
+    return () => clearInterval(id);
   }, [events.length, visible, intervalMs]);
 
   if (!events.length) return null;
@@ -148,7 +129,7 @@ export function LiveActivityFeed({
               exit={{ opacity: 0, y: 10 }}
               transition={{ duration: 0.24 }}
             >
-              <ActivityRow event={event} now={now} />
+              <ActivityRow event={event} />
             </motion.div>
           ))}
         </AnimatePresence>

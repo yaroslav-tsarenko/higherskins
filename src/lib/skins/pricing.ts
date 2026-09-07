@@ -29,6 +29,18 @@ export interface PriceProvider {
   }): PriceQuote;
 }
 
+// Real marketplaces don't sell listable skins for a few cents, so we floor every
+// listing at a realistic minimum. The cheapest item on the site lands here.
+export const MIN_LISTING_PRICE = 3.5;
+
+// Lift a price to the floor while keeping the Steam reference consistent with the
+// listing's discount, so the "below Steam" delta still reads correctly.
+export function enforceMinPrice(price: number, discountPct: number): PriceQuote {
+  const floored = Math.max(MIN_LISTING_PRICE, price);
+  const steamPrice = round2(floored / (1 - discountPct / 100));
+  return { price: round2(floored), steamPrice, discountPct };
+}
+
 // Exterior price coefficient — FN commands a premium, BS is cheapest.
 const EXTERIOR_COEF: Record<ExteriorCode, number> = {
   FN: 1.9,
@@ -68,6 +80,7 @@ export const deterministicProvider: PriceProvider = {
     const discountPct = round2(4 + discountRng() * 18);
     const price = round2(steam * (1 - discountPct / 100));
 
+    if (price < MIN_LISTING_PRICE) return enforceMinPrice(price, discountPct);
     return { price, steamPrice: round2(steam), discountPct };
   },
 };

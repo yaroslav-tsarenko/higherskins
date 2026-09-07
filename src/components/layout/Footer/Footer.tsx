@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { HigherskinsLogo } from "../HigherskinsLogo";
-import { brand } from "@/lib/brand";
+import { brand, brandAddressLine } from "@/lib/brand";
 import { useCurrency } from "@/providers/CurrencyProvider";
 import visaLogo from "@/assets/visa-logo.svg";
 import mastercardLogo from "@/assets/mastercard-logo.svg";
@@ -95,10 +95,12 @@ const PAYMENT_METHODS = [
   { src: pciDssLogo, label: "PCI DSS compliant", logoClass: "max-h-8" },
 ];
 
+// Community accounts are not live yet — route them to the coming-soon page
+// instead of dead external links until the real profiles exist.
 const socialLinks = [
   { icon: FaDiscord, label: "Discord", href: "/coming-soon", external: false },
   { icon: FaXTwitter, label: "X (Twitter)", href: "/coming-soon", external: false },
-  { icon: FaInstagram, label: "Instagram", href: brand.social.instagram, external: true },
+  { icon: FaInstagram, label: "Instagram", href: "/coming-soon", external: false },
 ];
 
 function LinkGroup({ group }: { group: Group }) {
@@ -367,8 +369,10 @@ export function Footer() {
               their respective owners.
             </p>
             <p className="text-[11.5px] text-[color:var(--color-text)]/45">
-              {brand.company.legalName} · Company No. {brand.company.number} ·{" "}
-              {brand.company.address.city}, {brand.company.address.country}
+              {brand.company.legalName} · Company No. {brand.company.number}
+            </p>
+            <p className="text-[11.5px] text-[color:var(--color-text)]/45">
+              Registered office: {brandAddressLine}
             </p>
           </div>
 
