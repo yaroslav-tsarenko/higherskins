@@ -58,7 +58,7 @@ export default async function AuthPage({
           </Link>
           <a
             href={steamHref}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#2a475e] px-5 py-3 text-sm font-bold text-white transition hover:brightness-110"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#2a6ea6] px-5 py-3 text-sm font-bold text-white transition hover:brightness-110"
           >
             <SteamIcon />
             Sign in through Steam

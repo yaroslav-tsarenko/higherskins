@@ -160,7 +160,7 @@ export function TradeSetupModal({
             </Link>
             <a
               href={steamHref}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-[#2a475e] px-5 py-3 text-sm font-bold text-white hover:brightness-110"
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-[#2a6ea6] px-5 py-3 text-sm font-bold text-white hover:brightness-110"
             >
               Sign in through Steam
             </a>
@@ -180,7 +180,7 @@ export function TradeSetupModal({
             </p>
             <a
               href={steamLinkHref}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#2a475e] px-5 py-3 text-sm font-bold text-white hover:brightness-110"
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#2a6ea6] px-5 py-3 text-sm font-bold text-white hover:brightness-110"
             >
               Link Steam account
             </a>

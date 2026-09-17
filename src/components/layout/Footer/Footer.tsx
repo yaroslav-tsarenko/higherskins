@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { openCookieSettings } from "@/components/shared/CookieConsent/CookieConsent";
-import { FaDiscord, FaXTwitter, FaInstagram } from "react-icons/fa6";
 import {
   ArrowRight,
   Mail,
@@ -93,14 +92,6 @@ const PAYMENT_METHODS = [
   // PCI DSS artwork carries a lot of internal padding, so it needs a taller cap
   // to read at the same optical size as the card logos.
   { src: pciDssLogo, label: "PCI DSS compliant", logoClass: "max-h-8" },
-];
-
-// Community accounts are not live yet — route them to the coming-soon page
-// instead of dead external links until the real profiles exist.
-const socialLinks = [
-  { icon: FaDiscord, label: "Discord", href: "/coming-soon", external: false },
-  { icon: FaXTwitter, label: "X (Twitter)", href: "/coming-soon", external: false },
-  { icon: FaInstagram, label: "Instagram", href: "/coming-soon", external: false },
 ];
 
 function LinkGroup({ group }: { group: Group }) {
@@ -194,57 +185,6 @@ function LegalGroup() {
   );
 }
 
-function CommunityGroup() {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="border-b border-[color:var(--color-text)]/10 md:border-b-0">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className="flex w-full items-center justify-between py-4 text-left md:hidden"
-      >
-        <span className="font-display text-[15.5px] font-semibold tracking-tight text-[color:var(--color-text)]">
-          Community
-        </span>
-        <ChevronDown
-          size={15}
-          className={`text-[color:var(--color-accent)] transition-transform ${open ? "rotate-180" : ""}`}
-        />
-      </button>
-      <h3 className="hidden pb-5 font-display text-[16px] font-semibold tracking-tight text-[color:var(--color-text)] md:block">
-        <span className="relative inline-block after:absolute after:-bottom-2 after:left-0 after:h-px after:w-8 after:rounded-full after:bg-[color:var(--color-primary)]">
-          Community
-        </span>
-      </h3>
-      <ul
-        className={`grid grid-cols-1 gap-y-2.5 pb-4 md:gap-y-3 ${open ? "grid" : "hidden md:grid"}`}
-        aria-hidden={!open}
-      >
-        {socialLinks.map(({ icon: Icon, label, href, external }) => {
-          const cls =
-            "inline-flex items-center gap-2 text-[13.5px] text-[color:var(--color-text)]/70 transition-colors hover:text-[color:var(--color-primary)]";
-          return (
-            <li key={label}>
-              {external ? (
-                <a href={href} target="_blank" rel="noopener noreferrer" className={cls}>
-                  <Icon size={14} className="text-[color:var(--color-text-tertiary)]" />
-                  {label}
-                </a>
-              ) : (
-                <Link href={href} className={cls}>
-                  <Icon size={14} className="text-[color:var(--color-text-tertiary)]" />
-                  {label}
-                </Link>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
-
 export function Footer() {
   const t = useTranslations("footer");
   const { currency, symbol } = useCurrency();
@@ -309,12 +249,11 @@ export function Footer() {
           </div>
 
           {/* Link groups */}
-          <div className="grid grid-cols-1 gap-x-8 gap-y-0 md:grid-cols-2 lg:grid-cols-5">
+          <div className="grid grid-cols-1 gap-x-8 gap-y-0 md:grid-cols-2 lg:grid-cols-4">
             {groups.map((g) => (
               <LinkGroup key={g.key} group={g} />
             ))}
             <LegalGroup />
-            <CommunityGroup />
           </div>
         </div>
 
@@ -380,28 +319,6 @@ export function Footer() {
             <div className="inline-flex items-center gap-2 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-[color:var(--color-text)]/85">
               <Globe size={11} className="text-[color:var(--color-primary)]" />
               <span>{currency} {symbol}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              {socialLinks.map(({ icon: Icon, label, href, external }) => {
-                const cls =
-                  "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] text-[color:var(--color-text)]/75 transition-all hover:border-[color:var(--color-primary)] hover:text-[color:var(--color-primary)]";
-                return external ? (
-                  <a
-                    key={label}
-                    href={href}
-                    aria-label={label}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={cls}
-                  >
-                    <Icon size={14} />
-                  </a>
-                ) : (
-                  <Link key={label} href={href} aria-label={label} className={cls}>
-                    <Icon size={14} />
-                  </Link>
-                );
-              })}
             </div>
           </div>
         </div>
