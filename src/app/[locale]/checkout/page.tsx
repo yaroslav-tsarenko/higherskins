@@ -17,6 +17,7 @@ import { formatPrice } from "@/lib/utils/format-price";
 import { COUNTRIES } from "@/lib/countries";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs/Breadcrumbs";
 import { toast } from "sonner";
+import { PayntWidget } from "@/components/checkout/PayntWidget";
 import {
   Mail, Phone, MapPin, Truck, CreditCard,
   ChevronRight, ShieldCheck, Lock, Check, ImageOff, UserPlus, Tag, X as XIcon,
@@ -35,7 +36,7 @@ const SHIPPING_METHODS = [
   { key: "free", label: "Economy Shipping", time: "7-14 business days", price: 0, icon: Truck },
 ];
 
-const stepIcons = [Mail, MapPin, CreditCard];
+const stepIcons = [Mail, MapPin, CreditCard, Lock];
 const stepVariants = {
   enter: { opacity: 0, x: 30 },
   center: { opacity: 1, x: 0 },
@@ -75,6 +76,13 @@ export default function CheckoutPage() {
   const [promoInput, setPromoInput] = useState("");
   const [promoError, setPromoError] = useState<string | null>(null);
   const [applyingPromo, setApplyingPromo] = useState(false);
+  const [payntData, setPayntData] = useState<{
+    checkoutId: string;
+    scriptUrl: string;
+    integrity: string;
+    shopperResultUrl: string;
+    orderId: string;
+  } | null>(null);
 
   const {
     register,
@@ -100,7 +108,7 @@ export default function CheckoutPage() {
     },
   });
 
-  const steps = [t("contact"), t("shipping"), t("review")];
+  const steps = [t("contact"), t("shipping"), t("review"), "Payment"];
   const selectedMethod = watch("shippingMethod");
   const selectedCountry = watch("shipping.country");
   const availableMethods = cart.subtotal >= 100
@@ -190,12 +198,23 @@ export default function CheckoutPage() {
       }
 
       const orderData = await res.json();
-      clearCart();
 
-      if (orderData.redirectUrl) {
+      if (orderData.checkoutId && orderData.scriptUrl) {
+        setPayntData({
+          checkoutId: orderData.checkoutId,
+          scriptUrl: orderData.scriptUrl,
+          integrity: orderData.integrity || "",
+          shopperResultUrl: orderData.shopperResultUrl,
+          orderId: orderData.id || orderData.orderId,
+        });
+        setStep(3);
+        toast.success("Ready for secure card payment");
+      } else if (orderData.redirectUrl) {
+        clearCart();
         toast.success("Redirecting to payment page...");
         window.location.href = orderData.redirectUrl;
       } else {
+        clearCart();
         toast.success("Order placed successfully!");
         router.push(`/order/confirmed?orderId=${orderData.id}`);
       }
@@ -207,10 +226,10 @@ export default function CheckoutPage() {
   };
 
   useEffect(() => {
-    if (cart.items.length === 0) {
+    if (cart.items.length === 0 && !payntData && !submitting) {
       router.push("/cart");
     }
-  }, [cart.items.length, router]);
+  }, [cart.items.length, payntData, submitting, router]);
 
   if (cart.items.length === 0) return null;
 
@@ -266,9 +285,9 @@ export default function CheckoutPage() {
           return (
             <button
               key={i}
-              onClick={() => i < step && setStep(i)}
+              onClick={() => i < step && !payntData && setStep(i)}
               className={`flex flex-1 items-center justify-center gap-2 rounded-xl border-none px-4 py-3 text-[13px] transition-all ${
-                i <= step ? "cursor-pointer" : "cursor-default"
+                i <= step && !payntData ? "cursor-pointer" : "cursor-default"
               } ${
                 isActive
                   ? "bg-[color:var(--color-bg-elevated)] font-bold text-[color:var(--color-text)] shadow-sm"
@@ -532,6 +551,39 @@ export default function CheckoutPage() {
                     </Button>
                   </motion.div>
                 </div>
+              </motion.div>
+            )}
+
+            {step === 3 && payntData && (
+              <motion.div
+                key="payment"
+                variants={stepVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.25 }}
+                className="flex flex-col gap-4 rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-bg-elevated)] p-5 sm:gap-5 sm:p-8"
+              >
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[color:var(--color-accent-tint)] text-[color:var(--color-accent)]">
+                      <CreditCard size={16} />
+                    </div>
+                    <h2 className="font-serif text-xl font-medium tracking-tight text-[color:var(--color-text)]">
+                      Card Payment
+                    </h2>
+                  </div>
+                  <span className="font-mono text-xs text-[color:var(--color-text-tertiary)]">
+                    Order #{payntData.orderId.slice(-8)}
+                  </span>
+                </div>
+
+                <PayntWidget
+                  checkoutId={payntData.checkoutId}
+                  scriptUrl={payntData.scriptUrl}
+                  integrity={payntData.integrity}
+                  shopperResultUrl={payntData.shopperResultUrl}
+                />
               </motion.div>
             )}
           </AnimatePresence>

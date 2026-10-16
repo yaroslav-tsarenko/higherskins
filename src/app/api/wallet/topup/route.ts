@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
 import { TransfermitAPI } from "@/lib/payments/transfermit";
+import { extractClientIp } from "@/lib/paynt";
 
 export const runtime = "nodejs";
 
@@ -46,6 +47,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const isPayntConfigured = Boolean(
+    process.env.PAYNT_BEARER_TOKEN &&
+    process.env.PAYNT_BEARER_TOKEN !== "your_paynt_bearer_token" &&
+    process.env.PAYNT_BEARER_TOKEN.trim() !== ""
+  );
+
   const tx = await prisma.walletTransaction.create({
     data: {
       userId: user.id,
@@ -53,7 +60,7 @@ export async function POST(request: NextRequest) {
       status: "pending",
       amount,
       currency: "EUR",
-      provider: "transfermit",
+      provider: isPayntConfigured ? "paynt" : "transfermit",
       description: "Wallet top-up",
     },
     select: { id: true },
@@ -66,11 +73,62 @@ export async function POST(request: NextRequest) {
     "localhost:3000";
   const proto = request.headers.get("x-forwarded-proto") || "https";
   const baseUrl = /^https?:\/\//.test(host) ? host : `${proto}://${host}`;
-  const clientIp =
-    request.headers.get("x-forwarded-for")?.split(",")[0] ||
-    request.headers.get("x-real-ip") ||
-    "127.0.0.1";
+  const clientIp = extractClientIp(request.headers);
 
+  // 1. PayNT Copy & Pay Flow (Primary)
+  if (isPayntConfigured) {
+    try {
+      const { prepareCheckout } = await import("@/lib/paynt");
+      const shopperResultUrl = `${baseUrl}/account/wallet?topup=${tx.id}`;
+
+      const payntRes = await prepareCheckout({
+        amount,
+        currency: "EUR",
+        merchantTransactionId: tx.id,
+        shopperResultUrl,
+        customer: {
+          email: user.email || "",
+          givenName: user.firstName || address.firstName || "Customer",
+          surname: user.lastName || address.lastName || "",
+          phone: user.phone || undefined,
+          ip: clientIp,
+        },
+        billing: {
+          street1: address.address1,
+          street2: address.address2 || undefined,
+          city: address.city,
+          postcode: address.postalCode,
+          country: address.country,
+          state: address.province || undefined,
+        },
+      });
+
+      await prisma.walletTransaction.update({
+        where: { id: tx.id },
+        data: { paymentId: payntRes.checkoutId },
+      });
+
+      return NextResponse.json({
+        ok: true,
+        redirectUrl: `/account/wallet/pay?topupId=${tx.id}&checkoutId=${payntRes.checkoutId}&scriptUrl=${encodeURIComponent(payntRes.scriptUrl)}&shopperResultUrl=${encodeURIComponent(shopperResultUrl)}&integrity=${encodeURIComponent(payntRes.integrity || "")}`,
+        transactionId: tx.id,
+        checkoutId: payntRes.checkoutId,
+        scriptUrl: payntRes.scriptUrl,
+        shopperResultUrl,
+      });
+    } catch (e: any) {
+      await prisma.walletTransaction
+        .update({ where: { id: tx.id }, data: { status: "failed" } })
+        .catch(() => {});
+      console.error("[PayNT Wallet Top-up] Payment initialization failed:", e);
+      return NextResponse.json(
+        { code: "provider_error", error: e.message || "Could not initialize payment gateway. Try again shortly." },
+        { status: 502 },
+      );
+    }
+  }
+
+  // 2. Transfermit Fallback
   try {
     const api = new TransfermitAPI();
     const res = await api.createPayment({

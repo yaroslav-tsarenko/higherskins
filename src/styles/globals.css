@@ -431,3 +431,142 @@ img {
   }
   .card-lift:hover { transform: none; }
 }
+
+/* ============================================================
+   PayNT / OPPWA Copy & Pay Widget Styles
+   ============================================================ */
+.wpwl-container {
+  width: 100% !important;
+}
+
+/* Form container */
+.wpwl-form {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1.15rem !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-family: inherit !important;
+}
+
+/* Field group */
+.wpwl-group {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  clear: both !important;
+  float: none !important;
+}
+
+/* Field label */
+.wpwl-label {
+  float: none !important;
+  display: block !important;
+  width: 100% !important;
+  margin-bottom: 0.4rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: var(--color-text-secondary, #9BA3B0) !important;
+  text-align: left !important;
+}
+
+.wpwl-wrapper {
+  float: none !important;
+  display: block !important;
+  width: 100% !important;
+}
+
+/* Brand wrapper */
+.wpwl-wrapper-brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+}
+
+/* Inputs and iframes */
+.wpwl-control,
+.wpwl-control-iframe {
+  width: 100% !important;
+  height: 2.85rem !important;
+  background-color: var(--color-bg-elevated, #171A21) !important;
+  color: var(--color-text, #F5F7FA) !important;
+  border: 1px solid var(--color-line, rgba(255, 255, 255, 0.1)) !important;
+  border-radius: 0.65rem !important;
+  padding: 0.5rem 0.85rem !important;
+  font-size: 0.95rem !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: all 0.15s ease !important;
+}
+
+.wpwl-control:focus,
+.wpwl-control:focus-within {
+  border-color: var(--color-primary, #7C3AED) !important;
+  box-shadow: 0 0 0 3px var(--color-primary-tint, rgba(124, 58, 237, 0.2)) !important;
+}
+
+/* "Pay now" button */
+.wpwl-button-pay {
+  float: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 3.25rem !important;
+  margin-top: 0.75rem !important;
+  background-color: var(--color-primary, #7C3AED) !important;
+  color: #ffffff !important;
+  border: 2px solid transparent !important;
+  border-radius: 0.65rem !important;
+  font-weight: 700 !important;
+  font-size: 1.05rem !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.wpwl-button-pay:hover {
+  filter: brightness(1.12) !important;
+}
+
+/* Validation errors */
+.wpwl-has-error .wpwl-control {
+  border-color: var(--color-danger, #e5484d) !important;
+}
+
+.wpwl-has-error .wpwl-hint {
+  color: var(--color-danger, #e5484d) !important;
+  font-size: 0.75rem !important;
+  margin-top: 0.35rem !important;
+}
+
+/* Two-column responsive desktop layout */
+@media (min-width: 640px) {
+  .wpwl-form {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    column-gap: 1.25rem !important;
+    row-gap: 1.15rem !important;
+  }
+  .wpwl-group-brand,
+  .wpwl-group-cardNumber,
+  .wpwl-group-cardHolder,
+  .wpwl-group-submit {
+    grid-column: span 2 !important;
+  }
+  .wpwl-group-expiry {
+    grid-column: span 1 !important;
+  }
+  .wpwl-group-cvv {
+    grid-column: span 1 !important;
+  }
+}
+
