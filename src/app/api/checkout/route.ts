@@ -6,6 +6,7 @@ import { sendOrderConfirmationEmail, sendOrderInvoiceEmail } from "@/lib/email";
 import { scheduleEmail } from "@/lib/email-jobs";
 import { resolveDiscount, markDiscountUsed } from "@/lib/discounts";
 import { TransfermitAPI } from "@/lib/payments/transfermit";
+import { prepareCheckout } from "@/lib/paynt";
 
 export async function POST(request: NextRequest) {
   try {
@@ -63,6 +64,12 @@ export async function POST(request: NextRequest) {
     const shippingCost = discountedSubtotal >= 100 ? 0 : 5.99;
     const total = +(discountedSubtotal + taxAmount + shippingCost).toFixed(2);
 
+    const isPayntConfigured = Boolean(
+      process.env.PAYNT_BEARER_TOKEN &&
+      process.env.PAYNT_BEARER_TOKEN !== "your_paynt_bearer_token" &&
+      process.env.PAYNT_BEARER_TOKEN.trim() !== ""
+    );
+
     const order = await prisma.order.create({
       data: {
         userId: user?.id || null,
@@ -78,7 +85,7 @@ export async function POST(request: NextRequest) {
         discountCode: discount?.code ?? null,
         discountPercent: discount?.percent ?? null,
         total,
-        paymentMethod: "transfermit",
+        paymentMethod: isPayntConfigured ? "paynt" : "transfermit",
         items: { create: orderItems },
       },
       include: { items: true },
@@ -95,16 +102,82 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Initialize payment on Transfermit
+    const host =
+      request.headers.get("x-forwarded-host") ||
+      request.headers.get("host") ||
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      "localhost:9997";
+    const proto = request.headers.get("x-forwarded-proto") || "https";
+    const baseUrl = /^https?:\/\//.test(host) ? host : `${proto}://${host}`;
+    const clientIp =
+      request.headers.get("x-forwarded-for")?.split(",")[0] ||
+      request.headers.get("x-real-ip") ||
+      "127.0.0.1";
+
+    // 1. PayNT Copy & Pay Integration (Primary)
+    if (isPayntConfigured) {
+      const shopperResultUrl = `${baseUrl}/checkout/result?orderId=${order.id}`;
+
+      try {
+        const payntRes = await prepareCheckout({
+          amount: total,
+          currency: "EUR",
+          merchantTransactionId: order.id,
+          shopperResultUrl,
+          customer: {
+            email: validated.contact.email,
+            givenName: validated.shipping.firstName,
+            surname: validated.shipping.lastName,
+            phone: validated.contact.phone || undefined,
+            ip: clientIp,
+          },
+          billing: {
+            street1: validated.shipping.address1,
+            street2: validated.shipping.address2 || undefined,
+            city: validated.shipping.city,
+            postcode: validated.shipping.postalCode,
+            country: validated.shipping.country,
+            state: validated.shipping.province || undefined,
+          },
+        });
+
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { paymentId: payntRes.checkoutId },
+        });
+
+        return NextResponse.json(
+          {
+            ...order,
+            checkoutId: payntRes.checkoutId,
+            integrity: payntRes.integrity,
+            scriptUrl: payntRes.scriptUrl,
+            shopperResultUrl: payntRes.shopperResultUrl,
+          },
+          { status: 201 }
+        );
+      } catch (payntErr) {
+        console.error("PayNT checkout initialization failed:", payntErr);
+
+        await prisma.order.delete({ where: { id: order.id } });
+        for (const item of items) {
+          await prisma.product.update({
+            where: { id: item.productId },
+            data: { quantity: { increment: item.quantity } },
+          });
+        }
+
+        return NextResponse.json(
+          { error: "Payment initialization failed. Please try again." },
+          { status: 500 }
+        );
+      }
+    }
+
+    // 2. Transfermit Fallback (if PayNT not configured)
     let redirectUrl = "";
     try {
       const api = new TransfermitAPI();
-
-      const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || process.env.NEXT_PUBLIC_SITE_URL || "localhost:9997";
-      const proto = request.headers.get("x-forwarded-proto") || "http";
-      const baseUrl = `${proto}://${host}`;
-
-      const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0] || request.headers.get("x-real-ip") || "127.0.0.1";
 
       const paymentData = {
         amount: total,
@@ -135,12 +208,9 @@ export async function POST(request: NextRequest) {
       if (transfermitRes && transfermitRes.result) {
         const { id: paymentId, redirectUrl: rUrl } = transfermitRes.result;
 
-        // Update order with paymentId
         await prisma.order.update({
           where: { id: order.id },
-          data: {
-            paymentId: paymentId,
-          },
+          data: { paymentId: paymentId },
         });
 
         redirectUrl = rUrl || "";
@@ -150,12 +220,7 @@ export async function POST(request: NextRequest) {
     } catch (e) {
       console.error("Transfermit payment creation failed:", e);
 
-      // Rollback order creation
-      await prisma.order.delete({
-        where: { id: order.id },
-      });
-
-      // Restore stock inventory
+      await prisma.order.delete({ where: { id: order.id } });
       for (const item of items) {
         await prisma.product.update({
           where: { id: item.productId },

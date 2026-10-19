@@ -26,7 +26,7 @@ const SANCTIONED = new Set([
   "IQ", // Iraq (partial — full block for simplicity)
 ]);
 
-const ALL_COUNTRIES = [
+export const ALL_COUNTRIES = [
   { code: "AD", name: "Andorra", phone: "+376" },
   { code: "AE", name: "United Arab Emirates", phone: "+971" },
   { code: "AF", name: "Afghanistan", phone: "+93" },
