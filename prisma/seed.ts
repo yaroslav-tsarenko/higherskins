@@ -19,7 +19,7 @@ async function main() {
       id: "default",
       name: "Higherskins",
       description: "Refined athletic apparel for men, women and kids. Shipped from the United Kingdom.",
-      email: "info@higherskins.com",
+      email: "support@higherskins.com",
       currency: "GBP",
       taxRate: 20,
       freeShippingMin: 100,

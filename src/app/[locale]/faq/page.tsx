@@ -36,7 +36,7 @@ const faqs = [
   },
   {
     q: "How do I contact support?",
-    a: "You can reach us via our contact form or email at info@higherskins.com. We aim to respond within 24 hours on weekdays.",
+    a: "You can reach us via our contact form or email at support@higherskins.com. We aim to respond within 24 hours on weekdays.",
   },
 ];
 

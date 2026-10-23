@@ -10,7 +10,7 @@ async function main() {
   const now = new Date().toISOString();
   await c.query(
     `INSERT INTO "StoreSettings" (id, name, description, "primaryColor", "secondaryColor", email, currency, "taxRate", "freeShippingMin", "metaTitle", "metaDescription", "updatedAt")
-     VALUES ('default', $1, $2, '#0F172A', '#FFFFFF', 'info@higherskins.com', 'GBP', 20, 100, $3, $4, $5)
+     VALUES ('default', $1, $2, '#0F172A', '#FFFFFF', 'support@higherskins.com', 'GBP', 20, 100, $3, $4, $5)
      ON CONFLICT (id) DO UPDATE
        SET name = EXCLUDED.name,
            description = EXCLUDED.description,

@@ -10,7 +10,7 @@
 
 - [x] **Коректні реквізити компанії.** Скрізь (політики, футер, сторінки About/Contact,
   листи) вказано: `HIGHER MARGINS LTD`, Company No. `15605091`,
-  `20 Wenlock Road, London, England, N1 7GU`, `info@higherskins.com`.
+  `20 Wenlock Road, London, England, N1 7GU`, `support@higherskins.com`.
 - [x] **Поповнення гаманця/балансу.** Користувач має змогу поповнити баланс
   акаунта; кошти зараховуються на гаманець і доступні для покупок.
 - [x] **Прибрати слово «Marketplace».** Термін не зустрічається в UI сайту.

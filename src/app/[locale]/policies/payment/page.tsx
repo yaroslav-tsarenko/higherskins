@@ -213,7 +213,7 @@ export default function PaymentPolicyPage() {
       <h2>13. Chargebacks and Payment Disputes</h2>
       <p>
         13.1 If you have a problem with a payment, order, delivery, or refund, please contact us first at
-        info@higherskins.com so we can investigate and try to resolve the issue.
+        support@higherskins.com so we can investigate and try to resolve the issue.
       </p>
       <p>
         13.2 If you open a chargeback or payment dispute, we may provide information to our payment provider,
