@@ -60,6 +60,8 @@ export function TradeSetupModal({
     scriptUrl: string;
     integrity?: string;
     shopperResultUrl: string;
+    amount?: number;
+    currency?: string;
   } | null>(null);
 
   const [buyError, setBuyError] = useState<string | null>(initialError);
@@ -184,7 +186,7 @@ export function TradeSetupModal({
       <div
         className={`glass relative w-full ${
           payntData ? "max-w-lg" : "max-w-md"
-        } rounded-2xl border border-[color:var(--color-border)] p-6 transition-all`}
+        } max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain rounded-2xl border border-[color:var(--color-border)] p-6 transition-all`}
       >
         <button
           onClick={onClose}
@@ -356,6 +358,8 @@ export function TradeSetupModal({
                   scriptUrl={payntData.scriptUrl}
                   integrity={payntData.integrity}
                   shopperResultUrl={payntData.shopperResultUrl}
+                  amount={payntData.amount}
+                  currency={payntData.currency}
                 />
               </div>
             ) : (

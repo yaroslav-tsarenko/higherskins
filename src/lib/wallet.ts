@@ -33,6 +33,8 @@ export type StartCardPaymentResult =
         scriptUrl: string;
         integrity: string;
         shopperResultUrl: string;
+        amount: number;
+        currency: string;
       };
     }
   | { ok: false; code: "no_address" | "provider_error"; error: string; status: number };
@@ -137,6 +139,8 @@ export async function startCardPayment({
           scriptUrl: payntRes.scriptUrl,
           integrity: payntRes.integrity || "",
           shopperResultUrl: returnUrl,
+          amount,
+          currency: "EUR",
         },
       };
     }
