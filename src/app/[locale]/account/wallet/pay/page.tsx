@@ -2,7 +2,7 @@ import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { PayntWidget } from "@/components/checkout/PayntWidget";
-import { Wallet, ShieldCheck, ArrowLeft, ShoppingBag } from "lucide-react";
+import { Wallet, ArrowLeft, ShoppingBag } from "lucide-react";
 import { Link } from "@/i18n/routing";
 
 export const dynamic = "force-dynamic";
@@ -86,6 +86,8 @@ export default async function WalletPayPage({
           scriptUrl={scriptUrl}
           integrity={sp.integrity}
           shopperResultUrl={shopperResultUrl}
+          amount={Number(tx.amount)}
+          currency={tx.currency || "EUR"}
         />
       </div>
     </div>

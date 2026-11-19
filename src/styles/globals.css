@@ -433,140 +433,284 @@ img {
 }
 
 /* ============================================================
-   PayNT / OPPWA Copy & Pay Widget Styles
+   PayNT / OPPWA Copy & Pay widget
+   ------------------------------------------------------------
+   The widget shows and hides its own nodes with inline `display: none`:
+   channel fields it doesn't need (phone, birth date, consents) and the whole
+   card form while the 3-D Secure frame is up. Our layout rules must never
+   out-rank that, so the first rule below re-asserts every inline hide.
    ============================================================ */
 .wpwl-container {
+  position: relative !important;
   width: 100% !important;
-}
-
-/* Form container */
-.wpwl-form {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 1.15rem !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  background: transparent !important;
-  border: none !important;
-  padding: 0 !important;
   margin: 0 !important;
+  padding: 0 !important;
   font-family: inherit !important;
 }
 
-/* Field group */
-.wpwl-group {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: stretch !important;
-  width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  clear: both !important;
-  float: none !important;
+.wpwl-container[style*="display: none"],
+.wpwl-container [style*="display: none"],
+.wpwl-container [style*="display:none"] {
+  display: none !important;
 }
 
-/* Field label */
+.wpwl-form {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem 0.875rem;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  font-family: inherit !important;
+}
+
+.wpwl-group {
+  grid-column: 1 / -1;
+  order: 5;
+  display: flex;
+  flex-direction: column;
+  width: 100% !important;
+  min-width: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  float: none !important;
+  clear: none !important;
+}
+
+/* Card number, name, then expiry + CVC side by side, then pay. */
+.wpwl-group-cardNumber { order: 1; }
+.wpwl-group-cardHolder { order: 2; }
+.wpwl-group-expiry { order: 3; grid-column: span 1; }
+.wpwl-group-cvv { order: 4; grid-column: span 1; }
+.wpwl-group-submit { order: 10; margin-top: 0.25rem !important; }
+
+/* The brand is auto-detected from the card number; logos sit inside the
+   card number field instead of a separate dropdown. */
+.wpwl-group-brand {
+  display: none !important;
+}
+
 .wpwl-label {
   float: none !important;
-  display: block !important;
   width: 100% !important;
-  margin-bottom: 0.4rem !important;
+  margin: 0 0 0.4rem !important;
+  padding: 0 !important;
   font-size: 0.75rem !important;
-  font-weight: 700 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.06em !important;
-  color: var(--color-text-secondary, #9BA3B0) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  text-transform: none !important;
   text-align: left !important;
+  color: var(--color-text-secondary) !important;
 }
 
 .wpwl-wrapper {
+  position: relative !important;
   float: none !important;
-  display: block !important;
   width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-/* Brand wrapper */
-.wpwl-wrapper-brand {
-  display: flex !important;
-  align-items: center !important;
-  gap: 0.75rem !important;
-}
-
-/* Inputs and iframes */
 .wpwl-control,
 .wpwl-control-iframe {
+  display: block;
   width: 100% !important;
-  height: 2.85rem !important;
-  background-color: var(--color-bg-elevated, #171A21) !important;
-  color: var(--color-text, #F5F7FA) !important;
-  border: 1px solid var(--color-line, rgba(255, 255, 255, 0.1)) !important;
-  border-radius: 0.65rem !important;
-  padding: 0.5rem 0.85rem !important;
-  font-size: 0.95rem !important;
-  outline: none !important;
+  height: 3rem !important;
+  margin: 0 !important;
+  padding: 0 0.95rem !important;
   box-sizing: border-box !important;
-  transition: all 0.15s ease !important;
+  background-color: var(--color-bg) !important;
+  color: var(--color-text) !important;
+  border: 1px solid var(--color-line-strong) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: none !important;
+  outline: none !important;
+  font-family: inherit !important;
+  font-size: 0.95rem !important;
+  line-height: 3rem !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
 }
 
+/* Leave room for the brand logos on the right of the card number. */
+.wpwl-control-cardNumber {
+  padding-right: 5.5rem !important;
+}
+
+.wpwl-control::placeholder {
+  color: var(--color-text-tertiary) !important;
+  opacity: 1 !important;
+}
+
+.wpwl-control:hover,
+.wpwl-control-iframe:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-line-strong)) !important;
+}
+
+/* Hosted iframes can't take :focus, so PayntWidget toggles .hs-focus. */
 .wpwl-control:focus,
-.wpwl-control:focus-within {
-  border-color: var(--color-primary, #7C3AED) !important;
-  box-shadow: 0 0 0 3px var(--color-primary-tint, rgba(124, 58, 237, 0.2)) !important;
+.wpwl-control-iframe.hs-focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px var(--color-primary-tint) !important;
 }
 
-/* "Pay now" button */
+/* Visa / Mastercard marks inside the card number field. */
+.hs-card-brands {
+  position: absolute;
+  top: 0;
+  right: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  height: 3rem;
+  pointer-events: none;
+}
+
+.hs-card-brand {
+  display: block;
+  width: 2.1rem;
+  height: 1.35rem;
+  transition: opacity 0.15s ease, filter 0.15s ease;
+}
+
+.hs-card-brands[data-detected] .hs-card-brand {
+  opacity: 0.2;
+  filter: grayscale(1);
+}
+
+.hs-card-brands[data-detected] .hs-card-brand[data-active] {
+  opacity: 1;
+  filter: none;
+}
+
+/* Validation */
+.wpwl-control.wpwl-has-error,
+.wpwl-has-error .wpwl-control {
+  border-color: var(--color-danger) !important;
+  box-shadow: 0 0 0 3px var(--color-danger-tint) !important;
+}
+
+.wpwl-hint {
+  margin: 0.35rem 0 0 !important;
+  padding: 0 !important;
+  font-size: 0.75rem !important;
+  line-height: 1.35 !important;
+  color: var(--color-text-tertiary) !important;
+  text-align: left !important;
+}
+
+.wpwl-has-error ~ .wpwl-hint,
+.wpwl-hint[class*="Error"] {
+  color: var(--color-danger) !important;
+}
+
+/* Gateway messages (declined card, expired session, ...) */
+.wpwl-message {
+  grid-column: 1 / -1;
+  order: 0;
+  margin: 0 0 1rem !important;
+  padding: 0.75rem 0.95rem !important;
+  border: 1px solid var(--color-line-strong) !important;
+  border-radius: var(--radius-md) !important;
+  background: var(--color-bg) !important;
+  color: var(--color-text-secondary) !important;
+  font-size: 0.85rem !important;
+  line-height: 1.45 !important;
+  text-align: left !important;
+}
+
+.wpwl-message.wpwl-has-error {
+  border-color: color-mix(in srgb, var(--color-danger) 40%, transparent) !important;
+  background: var(--color-danger-tint) !important;
+  color: var(--color-danger) !important;
+}
+
+/* Consent checkboxes, when the channel asks for them */
+.wpwl-confirmation {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.wpwl-checkbox {
+  flex: none;
+  width: 1rem !important;
+  height: 1rem !important;
+  margin: 0.15rem 0 0 !important;
+  accent-color: var(--color-primary);
+}
+
+.wpwl-text-confirmation {
+  font-size: 0.78rem !important;
+  line-height: 1.45 !important;
+  text-align: left !important;
+  color: var(--color-text-secondary) !important;
+}
+
+/* Pay button */
+.wpwl-wrapper-submit {
+  display: block !important;
+}
+
+.wpwl-button,
 .wpwl-button-pay {
   float: none !important;
-  display: inline-flex !important;
+  display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   width: 100% !important;
   height: 3.25rem !important;
-  margin-top: 0.75rem !important;
-  background-color: var(--color-primary, #7C3AED) !important;
-  color: #ffffff !important;
-  border: 2px solid transparent !important;
-  border-radius: 0.65rem !important;
+  margin: 0 !important;
+  padding: 0 1.25rem !important;
+  border: 0 !important;
+  border-radius: var(--radius-md) !important;
+  background: var(--color-primary) !important;
+  color: var(--color-primary-fg) !important;
+  font-family: inherit !important;
+  font-size: 1rem !important;
   font-weight: 700 !important;
-  font-size: 1.05rem !important;
+  letter-spacing: 0.01em !important;
+  text-shadow: none !important;
+  box-shadow: 0 8px 24px -10px var(--color-primary-glow) !important;
   cursor: pointer !important;
-  transition: all 0.15s ease !important;
+  transition: background-color 0.15s ease, transform 0.15s ease, opacity 0.15s ease !important;
 }
 
 .wpwl-button-pay:hover {
-  filter: brightness(1.12) !important;
+  background: var(--color-primary-hover) !important;
 }
 
-/* Validation errors */
-.wpwl-has-error .wpwl-control {
-  border-color: var(--color-danger, #e5484d) !important;
+.wpwl-button-pay:active {
+  transform: translateY(1px);
 }
 
-.wpwl-has-error .wpwl-hint {
-  color: var(--color-danger, #e5484d) !important;
-  font-size: 0.75rem !important;
-  margin-top: 0.35rem !important;
+.wpwl-button-pay[disabled],
+.wpwl-button-pay.wpwl-button-disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
 }
 
-/* Two-column responsive desktop layout */
-@media (min-width: 640px) {
-  .wpwl-form {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    column-gap: 1.25rem !important;
-    row-gap: 1.15rem !important;
-  }
-  .wpwl-group-brand,
-  .wpwl-group-cardNumber,
-  .wpwl-group-cardHolder,
-  .wpwl-group-submit {
-    grid-column: span 2 !important;
-  }
-  .wpwl-group-expiry {
-    grid-column: span 1 !important;
-  }
+/* 3-D Secure: the bank's page replaces the card form inside the widget.
+   The widget sets its width/height inline once it loads. */
+.wpwl-container iframe.wpwl-target {
+  width: 100% !important;
+  max-width: 100% !important;
+  border: 0 !important;
+  border-radius: var(--radius-lg) !important;
+  background: #fff !important;
+}
+
+.wpwl-container iframe.wpwl-target:not([style*="display: none"]):not([style*="display:none"]) {
+  display: block !important;
+}
+
+@media (max-width: 380px) {
+  .wpwl-group-expiry,
   .wpwl-group-cvv {
-    grid-column: span 1 !important;
+    grid-column: 1 / -1;
   }
 }
-
