@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AlertCircle, Check, ExternalLink, Loader2, Lock, X } from "lucide-react";
+import { AlertCircle, Check, CreditCard, ExternalLink, Loader2, Lock, Wallet, X } from "lucide-react";
 import { useCurrency } from "@/providers/CurrencyProvider";
 
 export type PurchaseState = "anon" | "no-steam" | "no-trade-url" | "ready";
@@ -41,6 +41,8 @@ export function TradeSetupModal({
   const [buyError, setBuyError] = useState<string | null>(null);
   const [soldOut, setSoldOut] = useState(false);
   const [needTopUp, setNeedTopUp] = useState(false);
+  const [needAddress, setNeedAddress] = useState(false);
+  const [payingCard, setPayingCard] = useState(false);
   const [done, setDone] = useState(false);
 
   if (!open) return null;
@@ -109,6 +111,39 @@ export function TradeSetupModal({
       setBuyError("Network error, please retry.");
     } finally {
       setBuying(false);
+    }
+  };
+
+  // Direct card payment: the server opens a card checkout for exactly this
+  // listing and buys it as soon as the payment clears — no wallet top-up first.
+  const payByCard = async () => {
+    setPayingCard(true);
+    setBuyError(null);
+    try {
+      const res = await fetch("/api/skins/card-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listingId }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        if (json.code === "no_steam") {
+          setState("no-steam");
+        } else if (json.code === "no_trade_url") {
+          setState("no-trade-url");
+        } else if (json.code === "sold" || json.code === "not_found") {
+          setSoldOut(true);
+        } else if (json.code === "no_address") {
+          setNeedAddress(true);
+        }
+        setBuyError(json.error ?? "Could not start the card payment.");
+        setPayingCard(false);
+        return;
+      }
+      window.location.href = json.redirectUrl;
+    } catch {
+      setBuyError("Network error, please retry.");
+      setPayingCard(false);
     }
   };
 
@@ -282,25 +317,47 @@ export function TradeSetupModal({
                   >
                     Browse other offers
                   </button>
-                ) : needTopUp ? (
-                  <Link
-                    href="/account/wallet"
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[color:var(--color-primary)] px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-glow-violet)]"
-                  >
-                    Top up your wallet
-                  </Link>
                 ) : (
-                  <button
-                    onClick={confirmPurchase}
-                    disabled={buying}
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[color:var(--color-primary)] px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-glow-violet)] disabled:opacity-50"
-                  >
-                    {buying && <Loader2 className="h-4 w-4 animate-spin" />}
-                    Pay {price}
-                  </button>
+                  <>
+                    {needAddress ? (
+                      <Link
+                        href="/account/addresses"
+                        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[color:var(--color-primary)] px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-glow-violet)]"
+                      >
+                        Add billing address
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={payByCard}
+                        disabled={payingCard || buying}
+                        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[color:var(--color-primary)] px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-glow-violet)] disabled:opacity-50"
+                      >
+                        {payingCard ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                        Pay {price} by card
+                      </button>
+                    )}
+                    {needTopUp ? (
+                      <Link
+                        href="/account/wallet"
+                        className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-[color:var(--color-border)] px-5 py-3 text-sm font-semibold text-[color:var(--color-text)]"
+                      >
+                        <Wallet className="h-4 w-4" />
+                        Top up your wallet
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={confirmPurchase}
+                        disabled={buying || payingCard}
+                        className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-[color:var(--color-border)] px-5 py-3 text-sm font-semibold text-[color:var(--color-text)] disabled:opacity-50"
+                      >
+                        {buying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}
+                        Pay from wallet balance
+                      </button>
+                    )}
+                  </>
                 )}
                 <p className="mt-2 text-center text-xs text-[color:var(--color-text-tertiary)]">
-                  Skin is sent to your Steam via trade offer after payment.
+                  Secure Visa / Mastercard payment. Skin is sent to your Steam via trade offer after payment.
                 </p>
               </>
             )}

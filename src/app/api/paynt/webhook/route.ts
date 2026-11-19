@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
-import { getPaymentStatus, isPaymentSuccessful } from "@/lib/paynt";
+import { getPaymentStatus, isPaymentPending, isPaymentSuccessful } from "@/lib/paynt";
+import { settleTopup } from "@/lib/wallet";
 import { scheduleEmail } from "@/lib/email-jobs";
 import { sendOrderConfirmationEmail, sendOrderInvoiceEmail } from "@/lib/email";
 
@@ -70,36 +71,19 @@ export async function POST(request: NextRequest) {
 
     const isSuccess = isPaymentSuccessful(resultCode);
 
-    // 2. Check if this is a Wallet Top-up
-    const walletTx = await prisma.walletTransaction.findUnique({
-      where: { id: merchantTransactionId },
-    });
-
-    if (walletTx) {
-      if (walletTx.status === "completed") {
-        return NextResponse.json({ ok: true, note: "Wallet transaction already processed" });
-      }
-
-      if (isSuccess) {
-        await prisma.$transaction([
-          prisma.walletTransaction.update({
-            where: { id: walletTx.id },
-            data: { status: "completed", paymentId },
-          }),
-          prisma.user.update({
-            where: { id: walletTx.userId },
-            data: { balance: { increment: walletTx.amount } },
-          }),
-        ]);
-        console.log(`[PayNT Webhook] Credited wallet top-up ${walletTx.id} (+€${walletTx.amount})`);
-      } else {
-        await prisma.walletTransaction.update({
-          where: { id: walletTx.id },
-          data: { status: "failed", paymentId },
-        });
-        console.log(`[PayNT Webhook] Wallet top-up ${walletTx.id} marked as failed`);
-      }
-
+    // 2. Check if this is a Wallet Top-up (incl. direct card purchases of a skin)
+    if (isPaymentPending(resultCode)) {
+      return NextResponse.json({ ok: true, note: "Payment still pending" });
+    }
+    const settled = await settleTopup(
+      merchantTransactionId,
+      isSuccess ? "completed" : "failed",
+      paymentId,
+    );
+    if (settled.found) {
+      console.log(
+        `[PayNT Webhook] Top-up ${merchantTransactionId}: ${isSuccess ? "success" : "failed"}, credited=${settled.credited}`,
+      );
       return NextResponse.json({ ok: true });
     }
 
