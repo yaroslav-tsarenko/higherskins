@@ -27,10 +27,16 @@ export default async function SkinDetailPage({
   searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ listing?: string }>;
+  searchParams: Promise<{
+    listing?: string;
+    purchaseId?: string;
+    resourcePath?: string;
+    id?: string;
+  }>;
 }) {
   const { id } = await params;
-  const { listing } = await searchParams;
+  const sp = await searchParams;
+  const listing = sp.listing;
 
   const skin = await getSkinPageData(id);
   if (!skin) notFound();
@@ -55,6 +61,93 @@ export default async function SkinDetailPage({
     }
   }
 
+  let initialBuyOpen = false;
+  let initialDone = false;
+  let initialError: string | null = null;
+
+  if (sp.resourcePath && sp.purchaseId && user) {
+    initialBuyOpen = true;
+    try {
+      const { getPaymentStatus, isPaymentSuccessful } = await import("@/lib/paynt");
+      const { activeDeliveryProvider, computeFees } = await import("@/lib/skins/delivery");
+
+      const purchase = await prisma.skinPurchase.findUnique({
+        where: { id: sp.purchaseId },
+        include: {
+          listing: { include: { skin: true } },
+          user: { include: { steamAccount: true } },
+        },
+      });
+
+      if (purchase && purchase.userId === user.id) {
+        if (purchase.status === "completed" || purchase.status === "trade_sent") {
+          initialDone = true;
+        } else {
+          const status = await getPaymentStatus(sp.resourcePath);
+          if (isPaymentSuccessful(status.result?.code)) {
+            const price = Number(purchase.listing.price);
+            const fees = computeFees(price);
+
+            await prisma.$transaction([
+              prisma.skinPurchase.update({
+                where: { id: purchase.id },
+                data: { status: "completed" },
+              }),
+              prisma.skinListing.update({
+                where: { id: purchase.listingId },
+                data: { status: "sold" },
+              }),
+              prisma.walletTransaction.create({
+                data: {
+                  userId: user.id,
+                  type: "purchase",
+                  status: "completed",
+                  amount: -fees.total,
+                  currency: "EUR",
+                  provider: "paynt",
+                  paymentId: status.id,
+                  description: `${purchase.listing.skin.name} (Card payment)`,
+                },
+              }),
+            ]);
+
+            if (purchase.user.steamAccount?.tradeUrl) {
+              void activeDeliveryProvider.deliver({
+                purchaseId: purchase.id,
+                tradeUrl: purchase.user.steamAccount.tradeUrl,
+                marketHashName: purchase.listing.marketHashName,
+                steamId64: purchase.user.steamAccount.steamId64,
+                tradeToken: purchase.user.steamAccount.tradeToken ?? undefined,
+              });
+            }
+
+            initialDone = true;
+          } else {
+            await prisma.skinListing
+              .update({
+                where: { id: purchase.listingId },
+                data: { status: "available" },
+              })
+              .catch(() => {});
+            await prisma.skinPurchase
+              .update({
+                where: { id: purchase.id },
+                data: { status: "failed" },
+              })
+              .catch(() => {});
+
+            initialError =
+              status.result?.description ||
+              "Your payment could not be processed. Please check your card or try another payment method.";
+          }
+        }
+      }
+    } catch (err) {
+      console.error("[PayNT Skin Verify Error]:", err);
+      initialError = "Could not verify payment status. Please check My Trades.";
+    }
+  }
+
   return (
     <SkinDetailClient
       skin={skin}
@@ -63,6 +156,9 @@ export default async function SkinDetailPage({
       locked={locked}
       initialListingId={listing}
       purchaseState={purchaseState}
+      initialBuyOpen={initialBuyOpen}
+      initialDone={initialDone}
+      initialError={initialError}
     />
   );
 }

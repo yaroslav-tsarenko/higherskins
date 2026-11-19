@@ -56,6 +56,9 @@ export function SkinDetailClient({
   locked,
   initialListingId,
   purchaseState,
+  initialBuyOpen = false,
+  initialDone = false,
+  initialError = null,
 }: {
   skin: SkinPageData;
   history: PricePoint[];
@@ -63,6 +66,9 @@ export function SkinDetailClient({
   locked: boolean;
   initialListingId?: string;
   purchaseState: PurchaseState;
+  initialBuyOpen?: boolean;
+  initialDone?: boolean;
+  initialError?: string | null;
 }) {
   const { format } = useCurrency();
   const [selectedId, setSelectedId] = useState(
@@ -70,7 +76,7 @@ export function SkinDetailClient({
       ? initialListingId
       : skin.listings[0]?.id) ?? "",
   );
-  const [buyOpen, setBuyOpen] = useState(false);
+  const [buyOpen, setBuyOpen] = useState(initialBuyOpen);
   const selected = useMemo(
     () => skin.listings.find((l) => l.id === selectedId) ?? skin.listings[0],
     [skin.listings, selectedId],
@@ -293,6 +299,8 @@ export function SkinDetailClient({
           priceValue={selected.price}
           listingId={selected.id}
           next={`/skin/${skin.id}?listing=${selected.id}`}
+          initialDone={initialDone}
+          initialError={initialError}
         />
       )}
     </div>

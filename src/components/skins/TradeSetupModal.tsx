@@ -2,8 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AlertCircle, Check, ExternalLink, Loader2, Lock, X } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  Check,
+  CreditCard,
+  ExternalLink,
+  Loader2,
+  Lock,
+  Wallet,
+  X,
+} from "lucide-react";
 import { useCurrency } from "@/providers/CurrencyProvider";
+import { PayntWidget } from "@/components/checkout/PayntWidget";
 
 export type PurchaseState = "anon" | "no-steam" | "no-trade-url" | "ready";
 
@@ -22,6 +33,8 @@ export function TradeSetupModal({
   priceValue,
   listingId,
   next,
+  initialDone = false,
+  initialError = null,
 }: {
   open: boolean;
   onClose: () => void;
@@ -31,17 +44,28 @@ export function TradeSetupModal({
   priceValue: number;
   listingId: string;
   next: string;
+  initialDone?: boolean;
+  initialError?: string | null;
 }) {
   const { format } = useCurrency();
   const [state, setState] = useState<PurchaseState>(initialState);
   const [tradeUrl, setTradeUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const [buying, setBuying] = useState(false);
-  const [buyError, setBuyError] = useState<string | null>(null);
+  const [preparingCard, setPreparingCard] = useState(false);
+  const [payntData, setPayntData] = useState<{
+    checkoutId: string;
+    scriptUrl: string;
+    integrity?: string;
+    shopperResultUrl: string;
+  } | null>(null);
+
+  const [buyError, setBuyError] = useState<string | null>(initialError);
   const [soldOut, setSoldOut] = useState(false);
   const [needTopUp, setNeedTopUp] = useState(false);
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState(initialDone);
 
   if (!open) return null;
 
@@ -81,6 +105,43 @@ export function TradeSetupModal({
     }
   };
 
+  // Pay directly by Card (PayNT / OPPWA Copy & Pay)
+  const handlePayByCard = async () => {
+    setPreparingCard(true);
+    setBuyError(null);
+    try {
+      const res = await fetch("/api/skins/purchase/paynt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listingId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.code === "no_steam") {
+          setState("no-steam");
+        } else if (data.code === "no_trade_url") {
+          setState("no-trade-url");
+        } else if (data.code === "sold" || data.code === "not_found") {
+          setSoldOut(true);
+        }
+        setBuyError(data.error ?? "Could not initialize card payment.");
+        return;
+      }
+
+      setPayntData({
+        checkoutId: data.checkoutId,
+        scriptUrl: data.scriptUrl,
+        integrity: data.integrity || "",
+        shopperResultUrl: data.shopperResultUrl,
+      });
+    } catch {
+      setBuyError("Network error initializing card payment. Please retry.");
+    } finally {
+      setPreparingCard(false);
+    }
+  };
+
+  // Pay from Wallet balance
   const confirmPurchase = async () => {
     setBuying(true);
     setBuyError(null);
@@ -117,8 +178,15 @@ export function TradeSetupModal({
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="glass relative w-full max-w-md rounded-2xl border border-[color:var(--color-border)] p-6">
-        <button onClick={onClose} className="absolute right-4 top-4 text-[color:var(--color-text-tertiary)] hover:text-[color:var(--color-text)]">
+      <div
+        className={`glass relative w-full ${
+          payntData ? "max-w-lg" : "max-w-md"
+        } rounded-2xl border border-[color:var(--color-border)] p-6 transition-all`}
+      >
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 text-[color:var(--color-text-tertiary)] hover:text-[color:var(--color-text)] transition-colors"
+        >
           <X className="h-5 w-5" />
         </button>
 
@@ -239,13 +307,53 @@ export function TradeSetupModal({
                 </p>
                 <Link
                   href="/account/trades"
-                  className="mt-5 flex w-full items-center justify-center rounded-xl bg-[color:var(--color-primary)] px-5 py-3 text-sm font-bold text-white"
+                  className="mt-5 flex w-full items-center justify-center rounded-xl bg-[color:var(--color-primary)] px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-glow-violet)] hover:brightness-110"
                 >
                   View my trades
                 </Link>
-                <button onClick={onClose} className="mt-2 w-full rounded-xl border border-[color:var(--color-border)] px-5 py-3 text-sm font-semibold text-[color:var(--color-text)]">
+                <button
+                  onClick={onClose}
+                  className="mt-2 w-full rounded-xl border border-[color:var(--color-border)] px-5 py-3 text-sm font-semibold text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-elevated)] transition-colors"
+                >
                   Keep browsing
                 </button>
+              </div>
+            ) : payntData ? (
+              <div>
+                <div className="mb-4 flex items-center justify-between border-b border-[color:var(--color-border)] pb-3">
+                  <button
+                    type="button"
+                    onClick={() => setPayntData(null)}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-[color:var(--color-text-secondary)] hover:text-[color:var(--color-text)] transition-colors"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    Back to options
+                  </button>
+                  <span className="tnum text-sm font-bold text-[color:var(--color-text)]">
+                    {format(fees.total)}
+                  </span>
+                </div>
+
+                <div className="mb-3 flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[color:var(--color-primary-tint)] text-[color:var(--color-primary)]">
+                    <CreditCard size={16} />
+                  </div>
+                  <div>
+                    <h4 className="font-display text-sm font-bold text-[color:var(--color-text)]">
+                      Card payment
+                    </h4>
+                    <p className="text-[11px] text-[color:var(--color-text-secondary)]">
+                      {skinName}
+                    </p>
+                  </div>
+                </div>
+
+                <PayntWidget
+                  checkoutId={payntData.checkoutId}
+                  scriptUrl={payntData.scriptUrl}
+                  integrity={payntData.integrity}
+                  shopperResultUrl={payntData.shopperResultUrl}
+                />
               </div>
             ) : (
               <>
@@ -271,36 +379,59 @@ export function TradeSetupModal({
                 {buyError && (
                   <div className="mt-3 flex items-start gap-2 rounded-lg border border-[color:var(--color-danger)]/40 bg-[color:var(--color-danger)]/10 px-3 py-2 text-sm text-[color:var(--color-danger)]">
                     <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                    {buyError}
+                    <div className="flex-1">{buyError}</div>
                   </div>
                 )}
 
                 {soldOut ? (
                   <button
                     onClick={onClose}
-                    className="mt-4 w-full rounded-xl border border-[color:var(--color-border)] px-5 py-3 text-sm font-semibold text-[color:var(--color-text)]"
+                    className="mt-4 w-full rounded-xl border border-[color:var(--color-border)] px-5 py-3 text-sm font-semibold text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-elevated)] transition-colors"
                   >
                     Browse other offers
                   </button>
-                ) : needTopUp ? (
-                  <Link
-                    href="/account/wallet"
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[color:var(--color-primary)] px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-glow-violet)]"
-                  >
-                    Top up your wallet
-                  </Link>
                 ) : (
-                  <button
-                    onClick={confirmPurchase}
-                    disabled={buying}
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[color:var(--color-primary)] px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-glow-violet)] disabled:opacity-50"
-                  >
-                    {buying && <Loader2 className="h-4 w-4 animate-spin" />}
-                    Pay {price}
-                  </button>
+                  <div className="mt-4 flex flex-col gap-2.5">
+                    <button
+                      type="button"
+                      onClick={handlePayByCard}
+                      disabled={buying || preparingCard}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-[color:var(--color-primary)] px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-glow-violet)] hover:brightness-110 disabled:opacity-50 transition-all"
+                    >
+                      {preparingCard ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <CreditCard className="h-4 w-4" />
+                      )}
+                      Pay {format(fees.total)} by card
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={confirmPurchase}
+                      disabled={buying || preparingCard}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg)] px-5 py-3 text-sm font-bold text-[color:var(--color-text)] hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-elevated)] transition-colors disabled:opacity-50"
+                    >
+                      {buying ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Wallet className="h-4 w-4 text-[color:var(--color-text-secondary)]" />
+                      )}
+                      Pay from wallet balance
+                    </button>
+
+                    {needTopUp && (
+                      <Link
+                        href="/account/wallet"
+                        className="mt-1 text-center text-xs text-[color:var(--color-primary)] hover:underline"
+                      >
+                        Need to add funds? Top up your wallet →
+                      </Link>
+                    )}
+                  </div>
                 )}
-                <p className="mt-2 text-center text-xs text-[color:var(--color-text-tertiary)]">
-                  Skin is sent to your Steam via trade offer after payment.
+                <p className="mt-3 text-center text-xs text-[color:var(--color-text-tertiary)]">
+                  Secure Visa / Mastercard payment. Skin is sent to your Steam via trade offer after payment.
                 </p>
               </>
             )}
