@@ -637,6 +637,9 @@ model WalletTransaction {
   provider    String?  // transfermit
   paymentId   String?  // provider-side payment id
   description String?
+  // Set on a direct card purchase: once the top-up clears, the funds are spent
+  // on this listing straight away.
+  listingId   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

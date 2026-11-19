@@ -54,7 +54,7 @@ export function TradeSetupModal({
   const [error, setError] = useState<string | null>(null);
 
   const [buying, setBuying] = useState(false);
-  const [preparingCard, setPreparingCard] = useState(false);
+  const [payingCard, setPayingCard] = useState(false);
   const [payntData, setPayntData] = useState<{
     checkoutId: string;
     scriptUrl: string;
@@ -65,6 +65,7 @@ export function TradeSetupModal({
   const [buyError, setBuyError] = useState<string | null>(initialError);
   const [soldOut, setSoldOut] = useState(false);
   const [needTopUp, setNeedTopUp] = useState(false);
+  const [needAddress, setNeedAddress] = useState(false);
   const [done, setDone] = useState(initialDone);
 
   if (!open) return null;
@@ -105,43 +106,45 @@ export function TradeSetupModal({
     }
   };
 
-  // Pay directly by Card (PayNT / OPPWA Copy & Pay)
-  const handlePayByCard = async () => {
-    setPreparingCard(true);
+  // Direct card payment: opens card checkout for this listing
+  const payByCard = async () => {
+    setPayingCard(true);
     setBuyError(null);
     try {
-      const res = await fetch("/api/skins/purchase/paynt", {
+      const res = await fetch("/api/skins/card-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ listingId }),
       });
-      const data = await res.json();
+      const json = await res.json();
       if (!res.ok) {
-        if (data.code === "no_steam") {
+        if (json.code === "no_steam") {
           setState("no-steam");
-        } else if (data.code === "no_trade_url") {
+        } else if (json.code === "no_trade_url") {
           setState("no-trade-url");
-        } else if (data.code === "sold" || data.code === "not_found") {
+        } else if (json.code === "sold" || json.code === "not_found") {
           setSoldOut(true);
+        } else if (json.code === "no_address") {
+          setNeedAddress(true);
         }
-        setBuyError(data.error ?? "Could not initialize card payment.");
+        setBuyError(json.error ?? "Could not start the card payment.");
+        setPayingCard(false);
         return;
       }
 
-      setPayntData({
-        checkoutId: data.checkoutId,
-        scriptUrl: data.scriptUrl,
-        integrity: data.integrity || "",
-        shopperResultUrl: data.shopperResultUrl,
-      });
+      if (json.paynt) {
+        setPayntData(json.paynt);
+      } else if (json.redirectUrl) {
+        window.location.href = json.redirectUrl;
+      }
     } catch {
-      setBuyError("Network error initializing card payment. Please retry.");
+      setBuyError("Network error, please retry.");
     } finally {
-      setPreparingCard(false);
+      setPayingCard(false);
     }
   };
 
-  // Pay from Wallet balance
+  // Wallet purchase
   const confirmPurchase = async () => {
     setBuying(true);
     setBuyError(null);
@@ -392,41 +395,51 @@ export function TradeSetupModal({
                   </button>
                 ) : (
                   <div className="mt-4 flex flex-col gap-2.5">
-                    <button
-                      type="button"
-                      onClick={handlePayByCard}
-                      disabled={buying || preparingCard}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-[color:var(--color-primary)] px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-glow-violet)] hover:brightness-110 disabled:opacity-50 transition-all"
-                    >
-                      {preparingCard ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <CreditCard className="h-4 w-4" />
-                      )}
-                      Pay {format(fees.total)} by card
-                    </button>
+                    {needAddress ? (
+                      <Link
+                        href="/account/addresses"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[color:var(--color-primary)] px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-glow-violet)] hover:brightness-110"
+                      >
+                        Add billing address
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={payByCard}
+                        disabled={payingCard || buying}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[color:var(--color-primary)] px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-glow-violet)] hover:brightness-110 disabled:opacity-50 transition-all"
+                      >
+                        {payingCard ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <CreditCard className="h-4 w-4" />
+                        )}
+                        Pay {format(fees.total)} by card
+                      </button>
+                    )}
 
-                    <button
-                      type="button"
-                      onClick={confirmPurchase}
-                      disabled={buying || preparingCard}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg)] px-5 py-3 text-sm font-bold text-[color:var(--color-text)] hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-elevated)] transition-colors disabled:opacity-50"
-                    >
-                      {buying ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Wallet className="h-4 w-4 text-[color:var(--color-text-secondary)]" />
-                      )}
-                      Pay from wallet balance
-                    </button>
-
-                    {needTopUp && (
+                    {needTopUp ? (
                       <Link
                         href="/account/wallet"
-                        className="mt-1 text-center text-xs text-[color:var(--color-primary)] hover:underline"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-[color:var(--color-border)] px-5 py-3 text-sm font-semibold text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-elevated)] transition-colors"
                       >
-                        Need to add funds? Top up your wallet →
+                        <Wallet className="h-4 w-4" />
+                        Top up your wallet
                       </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={confirmPurchase}
+                        disabled={buying || payingCard}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg)] px-5 py-3 text-sm font-bold text-[color:var(--color-text)] hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-elevated)] transition-colors disabled:opacity-50"
+                      >
+                        {buying ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Wallet className="h-4 w-4 text-[color:var(--color-text-secondary)]" />
+                        )}
+                        Pay from wallet balance
+                      </button>
                     )}
                   </div>
                 )}

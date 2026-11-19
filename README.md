@@ -43,4 +43,4 @@ in `src/lib/brand.ts` — import from there instead of hardcoding.
 - **RYE FLOUR COOKIES LTD** (Company No. 15107933)
 - 304d, The Big Peg, 120 Vyse St, Birmingham, England, B18 6ND, United Kingdom
 - Phone: +44 7450 581147
-- Email: info@higherskins.com
+- Email: support@higherskins.com

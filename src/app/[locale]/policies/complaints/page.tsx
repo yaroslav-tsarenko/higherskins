@@ -42,7 +42,7 @@ export default function ComplaintsPolicyPage() {
       <h2>3. Contacting Us Before Making a Formal Complaint</h2>
       <p>Many problems can be resolved quickly through an ordinary support request.</p>
       <p>
-        You may contact info@higherskins.com if you need assistance with an Order, payment or Trade Offer.
+        You may contact support@higherskins.com if you need assistance with an Order, payment or Trade Offer.
       </p>
       <p>
         If you are dissatisfied with the response or want the matter to be treated as a formal complaint,
@@ -54,7 +54,7 @@ export default function ComplaintsPolicyPage() {
       </p>
 
       <h2>4. How to Submit a Complaint</h2>
-      <p>Send your complaint to info@higherskins.com. You may also write to:</p>
+      <p>Send your complaint to support@higherskins.com. You may also write to:</p>
       <ContactBlock />
       <p>Please include, where relevant:</p>
       <ul>
@@ -271,7 +271,7 @@ export default function ComplaintsPolicyPage() {
       <h2>15. Internal Review</h2>
       <p>
         If you disagree with the initial outcome, you may request an internal review by replying to the
-        response or emailing info@higherskins.com.
+        response or emailing support@higherskins.com.
       </p>
       <p>Your review request should explain:</p>
       <ul>

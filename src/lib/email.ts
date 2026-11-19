@@ -18,7 +18,7 @@ function getFrom(): string {
 }
 
 function getReplyTo(): string | undefined {
-  return process.env.RESEND_REPLY_TO || undefined;
+  return brand.contact.email;
 }
 
 function getSiteUrl(): string {
@@ -403,7 +403,7 @@ export async function sendOrderInvoiceEmail(data: OrderEmailData): Promise<boole
 
       <p style="color:#999;font-size:12px;margin:24px 0 0;line-height:1.6;text-align:center;">
         VAT is included in the prices shown where applicable. This invoice serves as proof of purchase.<br />
-        For any questions, reply to this email or contact <a href="mailto:info@higherskins.com" style="color:${BRAND_COLOR};">info@higherskins.com</a>.
+        For any questions, reply to this email or contact <a href="mailto:support@higherskins.com" style="color:${BRAND_COLOR};">support@higherskins.com</a>.
       </p>
     `,
       { preheader: `Invoice for order #${id} — ${formatEur(toNum(data.total))}` },

@@ -54,7 +54,7 @@ export default function RefundsPolicyPage() {
       <h2>3. Cancelling Before the Trade Offer Is Sent</h2>
       <p>3.1 You may request cancellation of an order before the Steam trade offer has been sent.</p>
       <p>
-        3.2 To request cancellation, contact us as soon as possible at info@higherskins.com with your order
+        3.2 To request cancellation, contact us as soon as possible at support@higherskins.com with your order
         number, or check the status under Account &rarr; My Trades.
       </p>
       <p>
@@ -99,7 +99,7 @@ export default function RefundsPolicyPage() {
       <p>
         6.1 If you accept a trade offer and the skin you received does not match the item you purchased
         (for example, a different weapon, wear, float, or pattern), contact us immediately at
-        info@higherskins.com with your order number and screenshots.
+        support@higherskins.com with your order number and screenshots.
       </p>
       <p>
         6.2 If we confirm that the item delivered does not match your order, we will provide the correct item

@@ -121,7 +121,7 @@ export default function TradeDeliveryPolicyPage() {
       <p>
         7.2 Always confirm that an incoming trade offer originates from our official bot and contains the
         exact skin you purchased before accepting. If anything looks incorrect, decline the offer and
-        contact us at info@higherskins.com.
+        contact us at support@higherskins.com.
       </p>
 
       <h2>8. Security and Fraud Prevention</h2>

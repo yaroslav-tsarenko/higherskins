@@ -13,6 +13,17 @@ export interface WalletTx {
   createdAt: string;
 }
 
+export interface WalletNotice {
+  tone: "info" | "warning" | "danger";
+  text: string;
+}
+
+const NOTICE_STYLES: Record<WalletNotice["tone"], string> = {
+  info: "border-[color:var(--color-primary)]/40 bg-[color:var(--color-primary-tint)] text-[color:var(--color-text)]",
+  warning: "border-[color:var(--color-warning)]/40 bg-[color:var(--color-warning)]/10 text-[color:var(--color-warning)]",
+  danger: "border-[color:var(--color-danger)]/40 bg-[color:var(--color-danger)]/10 text-[color:var(--color-danger)]",
+};
+
 const PRESETS = [10, 25, 50, 100, 250];
 
 const STATUS_STYLES: Record<string, string> = {
@@ -31,10 +42,12 @@ export function WalletPanel({
   balanceEur,
   transactions,
   hasAddress,
+  notice,
 }: {
   balanceEur: number;
   transactions: WalletTx[];
   hasAddress: boolean;
+  notice?: WalletNotice | null;
 }) {
   const { format, symbol, currency, rates } = useCurrency();
   const [amount, setAmount] = useState<number>(50);
@@ -87,6 +100,12 @@ export function WalletPanel({
           </p>
         </div>
       </div>
+
+      {notice && (
+        <div className={`mt-6 rounded-xl border px-4 py-3 text-sm font-medium ${NOTICE_STYLES[notice.tone]}`}>
+          {notice.text}
+        </div>
+      )}
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)]">
         <div className="relative p-6">

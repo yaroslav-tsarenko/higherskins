@@ -27,7 +27,7 @@ export const brand = {
   },
 
   contact: {
-    email: "info@higherskins.com",
+    email: "support@higherskins.com",
     phone: "+44 7450 581147",
     phoneHref: "tel:+447450581147",
     contactPage: "/contact",
