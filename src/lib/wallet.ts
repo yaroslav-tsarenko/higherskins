@@ -24,7 +24,17 @@ export interface CardPaymentUser {
 }
 
 export type StartCardPaymentResult =
-  | { ok: true; redirectUrl: string; transactionId: string }
+  | {
+      ok: true;
+      redirectUrl: string;
+      transactionId: string;
+      paynt?: {
+        checkoutId: string;
+        scriptUrl: string;
+        integrity: string;
+        shopperResultUrl: string;
+      };
+    }
   | { ok: false; code: "no_address" | "provider_error"; error: string; status: number };
 
 export function isPayntConfigured(): boolean {
@@ -118,7 +128,17 @@ export async function startCardPayment({
         shopperResultUrl: returnUrl,
         integrity: payntRes.integrity || "",
       });
-      return { ok: true, redirectUrl: `/account/wallet/pay?${params}`, transactionId: tx.id };
+      return {
+        ok: true,
+        redirectUrl: `/account/wallet/pay?${params}`,
+        transactionId: tx.id,
+        paynt: {
+          checkoutId: payntRes.checkoutId,
+          scriptUrl: payntRes.scriptUrl,
+          integrity: payntRes.integrity || "",
+          shopperResultUrl: returnUrl,
+        },
+      };
     }
 
     // 2. Transfermit fallback

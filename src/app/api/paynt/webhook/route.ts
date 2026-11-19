@@ -5,6 +5,7 @@ import { getPaymentStatus, isPaymentPending, isPaymentSuccessful } from "@/lib/p
 import { settleTopup } from "@/lib/wallet";
 import { scheduleEmail } from "@/lib/email-jobs";
 import { sendOrderConfirmationEmail, sendOrderInvoiceEmail } from "@/lib/email";
+import { activeDeliveryProvider, computeFees } from "@/lib/skins/delivery";
 
 export const runtime = "nodejs";
 
@@ -94,7 +95,74 @@ export async function POST(request: NextRequest) {
     });
 
     if (!order) {
-      console.warn(`[PayNT Webhook] No order or walletTx found for ID: ${merchantTransactionId}`);
+      // 4. Check if this is a SkinPurchase
+      const skinPurchase = await prisma.skinPurchase.findUnique({
+        where: { id: merchantTransactionId },
+        include: {
+          listing: { include: { skin: true } },
+          user: { include: { steamAccount: true } },
+        },
+      });
+
+      if (skinPurchase) {
+        if (skinPurchase.status === "completed" || skinPurchase.status === "trade_sent") {
+          return NextResponse.json({ ok: true, note: "Skin purchase already processed" });
+        }
+
+        if (isSuccess) {
+          const price = Number(skinPurchase.listing.price);
+          const fees = computeFees(price);
+
+          await prisma.$transaction([
+            prisma.skinPurchase.update({
+              where: { id: skinPurchase.id },
+              data: { status: "completed" },
+            }),
+            prisma.skinListing.update({
+              where: { id: skinPurchase.listingId },
+              data: { status: "sold" },
+            }),
+            prisma.walletTransaction.create({
+              data: {
+                userId: skinPurchase.userId,
+                type: "purchase",
+                status: "completed",
+                amount: -fees.total,
+                currency: "EUR",
+                provider: "paynt",
+                paymentId,
+                description: `${skinPurchase.listing.skin.name} (Card payment)`,
+              },
+            }),
+          ]);
+
+          if (skinPurchase.user.steamAccount?.tradeUrl) {
+            void activeDeliveryProvider.deliver({
+              purchaseId: skinPurchase.id,
+              tradeUrl: skinPurchase.user.steamAccount.tradeUrl,
+              marketHashName: skinPurchase.listing.marketHashName,
+              steamId64: skinPurchase.user.steamAccount.steamId64,
+              tradeToken: skinPurchase.user.steamAccount.tradeToken ?? undefined,
+            });
+          }
+
+          console.log(`[PayNT Webhook] Skin purchase ${skinPurchase.id} completed and delivery initiated`);
+        } else {
+          await prisma.skinListing.update({
+            where: { id: skinPurchase.listingId },
+            data: { status: "available" },
+          }).catch(() => {});
+          await prisma.skinPurchase.update({
+            where: { id: skinPurchase.id },
+            data: { status: "failed" },
+          }).catch(() => {});
+          console.log(`[PayNT Webhook] Skin purchase ${skinPurchase.id} failed, listing returned to available`);
+        }
+
+        return NextResponse.json({ ok: true });
+      }
+
+      console.warn(`[PayNT Webhook] No order, walletTx or skinPurchase found for ID: ${merchantTransactionId}`);
       return NextResponse.json({ ok: true, note: "No matching record" });
     }
 

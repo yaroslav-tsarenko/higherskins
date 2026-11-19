@@ -75,5 +75,9 @@ export async function POST(request: NextRequest) {
   if (!result.ok) {
     return NextResponse.json({ code: result.code, error: result.error }, { status: result.status });
   }
-  return NextResponse.json({ ok: true, redirectUrl: result.redirectUrl });
+  return NextResponse.json({
+    ok: true,
+    redirectUrl: result.redirectUrl,
+    paynt: "paynt" in result ? result.paynt : undefined,
+  });
 }
